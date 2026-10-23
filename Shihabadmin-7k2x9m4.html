@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0f172a">
+<title>Memo Admin</title>
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--inset:#0f172a;--line:#334155;--text:#f1f5f9;--muted:#94a3b8;--accent:#22c55e;--ok:#22c55e;--err:#f87171;--avbg:#334155;--avtx:#e2e8f0;--link:#38bdf8}
+:root[data-theme="light"]{--bg:#f1f5f9;--card:#ffffff;--inset:#f1f5f9;--line:#cbd5e1;--text:#0f172a;--muted:#64748b;--ok:#15803d;--err:#dc2626;--avbg:#e2e8f0;--avtx:#334155;--link:#0369a1}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Noto Sans Bengali",sans-serif;padding:16px}
+.card{width:100%;max-width:520px;background:var(--card);border-radius:16px;padding:20px;margin-top:10px}
+h1{margin:0 0 4px;font-size:24px}
+.sub{color:var(--muted);margin:0 0 12px;font-size:14px}
+label{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px}
+input,textarea{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--inset);color:var(--text);font-size:16px;font-family:inherit}
+textarea{resize:vertical;min-height:80px}
+button{display:block;width:100%;margin-top:14px;padding:12px;border:0;border-radius:10px;background:var(--accent);color:#052e16;font-size:15px;font-weight:600;cursor:pointer}
+button.sec{background:transparent;color:var(--text);border:1px solid var(--line)}
+button.warn{background:#f59e0b;color:#1c1917}
+button.danger{background:transparent;color:var(--err);border:1px solid var(--err)}
+button.tiny{width:auto;margin:0;padding:6px 11px;font-size:12px;font-weight:500}
+button:disabled{opacity:.55}
+.hidden{display:none}
+.row{display:flex;gap:10px;align-items:center}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.tabs{display:flex;gap:6px;margin:10px 0}
+.tabs button{margin:0;padding:10px 6px;font-size:13px;position:relative}
+.tabs button.on{background:var(--accent);color:#052e16;border-color:var(--accent)}
+.badge{display:inline-block;min-width:18px;height:18px;border-radius:9px;background:var(--err);color:#fff;font-size:11px;line-height:18px;text-align:center;padding:0 5px;margin-left:5px}
+.av{width:44px;height:44px;border-radius:50%;background:var(--avbg);color:var(--avtx);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;overflow:hidden;flex:none}
+.av img{width:100%;height:100%;object-fit:cover}
+.av.big{width:84px;height:84px;font-size:32px;margin:0 auto}
+.item{display:flex;gap:12px;align-items:center;padding:10px;border-radius:10px;background:var(--inset);margin-top:8px;cursor:pointer}
+.item b{display:block;font-size:15px;word-break:break-word}
+.item span{font-size:12px;color:var(--muted)}
+.item .grow{flex:1;min-width:0}
+.msg{margin-top:12px;font-size:14px;min-height:18px}
+.err{color:var(--err)}.ok{color:var(--ok)}
+.center{text-align:center}
+.alert{background:var(--inset);border-radius:10px;padding:12px;margin-top:8px;font-size:14px;word-break:break-word;border:1px solid transparent}
+.alert.new{border-color:var(--err)}
+.alert .time{font-size:12px;color:var(--muted);margin-top:4px}
+.bubble{max-width:85%;padding:9px 12px;border-radius:12px;margin-top:8px;font-size:14px;word-break:break-word;white-space:pre-wrap}
+.bubble.me{background:var(--accent);color:#052e16;margin-left:auto}
+.bubble.them{background:var(--inset)}
+.bubble small{display:block;font-size:11px;opacity:.7;margin-bottom:2px}
+.thread{max-height:320px;overflow-y:auto;margin-top:10px}
+.theme{width:auto;margin:0;padding:6px 11px;border-radius:20px;font-size:15px}
+</style>
+</head>
+<body>
+
+<div class="card hidden" id="login">
+  <div class="top"><h1>Memo Admin</h1><button class="sec theme" id="themeBtn1">&#9788;</button></div>
+  <p class="sub">Admin sign in</p>
+  <label for="aId">Admin ID</label>
+  <input id="aId" type="tel" inputmode="numeric" autocomplete="username">
+  <label for="aPw">Password</label>
+  <input id="aPw" type="password" autocomplete="current-password">
+  <button id="aLogin">Log In</button>
+  <div class="msg" id="aMsg"></div>
+</div>
+
+<div class="card hidden" id="app">
+  <div class="top">
+    <h1>Memo Admin</h1>
+    <div class="row">
+      <button class="sec theme" id="themeBtn2">&#9788;</button>
+      <button class="sec tiny" id="logoutBtn">Log Out</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="sec on" id="tabUsers">Users</button>
+    <button class="sec" id="tabInbox">Inbox<span class="badge hidden" id="bInbox">0</span></button>
+    <button class="sec" id="tabAlerts">Alerts<span class="badge hidden" id="bAlerts">0</span></button>
+  </div>
+
+  <div id="pUsers">
+    <input id="search" type="search" placeholder="Search by name or ID">
+    <div id="userList"></div>
+    <p class="sub" id="noUsers">No users found.</p>
+  </div>
+
+  <div id="pInbox" class="hidden">
+    <div id="threadList"></div>
+    <p class="sub" id="noThreads">No messages from users yet.</p>
+  </div>
+
+  <div id="pAlerts" class="hidden">
+    <div id="alertList"></div>
+    <p class="sub" id="noAlerts">No alerts yet.</p>
+  </div>
+  <div class="msg" id="appMsg"></div>
+</div>
+
+<div class="card hidden" id="detail">
+  <div class="av big" id="dAv"></div>
+  <h1 class="center" id="dName" style="margin-top:10px;word-break:break-word"></h1>
+  <p class="sub center" id="dId"></p>
+  <div class="thread" id="dThread"></div>
+  <textarea id="dText" maxlength="1000" placeholder="Write a message. It will reach the user from the Memo account." style="margin-top:12px"></textarea>
+  <button id="dSend">Send message</button>
+  <button class="warn" id="dWarn">Send as warning</button>
+  <button class="sec" id="dBack">Back</button>
+  <button class="danger" id="dBlock">Block permanently</button>
+  <div class="msg" id="dMsg"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://yfeieoxxkwnbunfaubha.supabase.co";
+const KEY = "sb_publishable_NoKYjOBxR8Ev6ZulOx00mA_Fblx4wzA";
+const AVATAR_PREFIX = SUPABASE_URL + "/storage/v1/object/public/avatars/";
+const sb = supabase.createClient(SUPABASE_URL, KEY, { auth: { storageKey: "memo-admin-auth" } });
+const $ = (id) => document.getElementById(id);
+const SCREENS = ["login", "app", "detail"];
+let cur = null;
+let tab = "users";
+let timer = null;
+let signedIn = false;
+
+/* theme */
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  try { localStorage.setItem("memo-admin-theme", t); } catch (e) {}
+  const icon = t === "dark" ? "\u2600" : "\u263E";
+  $("themeBtn1").textContent = icon;
+  $("themeBtn2").textContent = icon;
+}
+(function () {
+  let t = null;
+  try { t = localStorage.getItem("memo-admin-theme"); } catch (e) {}
+  if (t !== "light" && t !== "dark") t = "dark";
+  setTheme(t);
+})();
+const flip = () => setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+$("themeBtn1").onclick = flip;
+$("themeBtn2").onclick = flip;
+
+/* helpers */
+function show(n) { SCREENS.forEach((s) => $(s).classList.toggle("hidden", s !== n)); window.scrollTo(0, 0); }
+function msg(id, text, ok) { const e = $(id); e.textContent = text || ""; e.className = "msg " + (ok ? "ok" : "err"); }
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; }
+function paintAvatar(box, url, name) {
+  box.textContent = "";
+  if (url && String(url).startsWith(AVATAR_PREFIX)) {
+    const img = document.createElement("img");
+    img.alt = ""; img.src = url; box.appendChild(img);
+  } else { box.textContent = (name || "?").trim().charAt(0).toUpperCase(); }
+}
+function timeAgo(iso) {
+  const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return m + " min ago";
+  if (m < 1440) return Math.floor(m / 60) + " h ago";
+  return Math.floor(m / 1440) + " d ago";
+}
+function badge(id, n) { const b = $(id); b.textContent = n > 99 ? "99+" : String(n); b.classList.toggle("hidden", !n); }
+
+/* login */
+$("aLogin").onclick = async () => {
+  const id = $("aId").value.trim(), pw = $("aPw").value;
+  if (!/^\d{10,}$/.test(id) || !pw) return msg("aMsg", "Enter your ID and password.");
+  const btn = $("aLogin");
+  btn.disabled = true;
+  msg("aMsg", "Signing in...", true);
+  const { error } = await sb.auth.signInWithPassword({ email: id + "@chatapp.local", password: pw });
+  if (error) { btn.disabled = false; return msg("aMsg", "Incorrect ID or password."); }
+  const ok = await enter();
+  btn.disabled = false;
+  if (!ok) return msg("aMsg", "This account is not an admin.");
+  $("aPw").value = "";
+  msg("aMsg", "");
+};
+
+async function enter() {
+  const { error } = await sb.rpc("admin_list_users", { q: "" });
+  if (error) { await sb.auth.signOut(); signedIn = false; show("login"); return false; }
+  signedIn = true;
+  show("app");
+  setTab("users");
+  refreshBadges();
+  clearInterval(timer);
+  timer = setInterval(() => { if (signedIn && !document.hidden) refreshBadges(); }, 30000);
+  return true;
+}
+
+$("logoutBtn").onclick = async () => {
+  await sb.auth.signOut();
+  signedIn = false;
+  clearInterval(timer);
+  show("login");
+};
+
+/* tabs */
+function setTab(t) {
+  tab = t;
+  $("tabUsers").classList.toggle("on", t === "users");
+  $("tabInbox").classList.toggle("on", t === "inbox");
+  $("tabAlerts").classList.toggle("on", t === "alerts");
+  $("pUsers").classList.toggle("hidden", t !== "users");
+  $("pInbox").classList.toggle("hidden", t !== "inbox");
+  $("pAlerts").classList.toggle("hidden", t !== "alerts");
+  msg("appMsg", "");
+  if (t === "users") loadUsers();
+  if (t === "inbox") loadThreads();
+  if (t === "alerts") loadAlerts();
+}
+$("tabUsers").onclick = () => setTab("users");
+$("tabInbox").onclick = () => setTab("inbox");
+$("tabAlerts").onclick = () => setTab("alerts");
+
+async function refreshBadges() {
+  const [{ data: th }, { data: ev }] = await Promise.all([sb.rpc("admin_threads"), sb.rpc("admin_events_list")]);
+  badge("bInbox", (th || []).reduce((s, t) => s + Number(t.unread || 0), 0));
+  badge("bAlerts", (ev || []).filter((e) => !e.read).length);
+}
+
+/* users */
+let searchTimer = null;
+$("search").oninput = () => { clearTimeout(searchTimer); searchTimer = setTimeout(loadUsers, 300); };
+
+async function loadUsers() {
+  const { data, error } = await sb.rpc("admin_list_users", { q: $("search").value.trim() });
+  if (error) return msg("appMsg", "Could not load users.");
+  const rows = data || [];
+  const list = $("userList");
+  list.textContent = "";
+  rows.forEach((u) => {
+    const it = el("div", "item");
+    const av = el("div", "av");
+    paintAvatar(av, u.avatar_url, u.display_name);
+    const g = el("div", "grow");
+    g.appendChild(el("b", "", u.display_name));
+    g.appendChild(el("span", "", "ID: " + u.user_code));
+    it.appendChild(av);
+    it.appendChild(g);
+    it.onclick = () => openUser(u);
+    list.appendChild(it);
+  });
+  $("noUsers").classList.toggle("hidden", rows.length > 0);
+}
+
+/* inbox */
+async function loadThreads() {
+  const { data, error } = await sb.rpc("admin_threads");
+  if (error) return msg("appMsg", "Could not load messages.");
+  const rows = data || [];
+  const list = $("threadList");
+  list.textContent = "";
+  rows.forEach((t) => {
+    const it = el("div", "item");
+    const av = el("div", "av");
+    paintAvatar(av, t.avatar_url, t.display_name);
+    const g = el("div", "grow");
+    g.appendChild(el("b", "", t.display_name + "  (ID " + t.user_code + ")"));
+    const prefix = t.last_sender === "admin" ? "You: " : "";
+    const body = String(t.last_body || "");
+    g.appendChild(el("span", "", prefix + (body.length > 60 ? body.slice(0, 60) + "..." : body) + "  \u2022 " + timeAgo(t.last_at)));
+    it.appendChild(av);
+    it.appendChild(g);
+    if (Number(t.unread) > 0) it.appendChild(el("span", "badge", String(t.unread)));
+    it.onclick = () => openUser({ id: t.id, user_code: t.user_code, display_name: t.display_name, avatar_url: t.avatar_url });
+    list.appendChild(it);
+  });
+  $("noThreads").classList.toggle("hidden", rows.length > 0);
+}
+
+/* alerts */
+async function loadAlerts() {
+  const { data, error } = await sb.rpc("admin_events_list");
+  if (error) return msg("appMsg", "Could not load alerts.");
+  const rows = data || [];
+  const who = (n, c) => (n ? n + " (ID " + c + ")" : "a deleted user");
+  const list = $("alertList");
+  list.textContent = "";
+  rows.forEach((e) => {
+    const box = el("div", "alert" + (!e.read ? " new" : ""));
+    let text;
+    if (e.kind === "block") text = who(e.actor_name, e.actor_code) + " blocked " + who(e.target_name, e.target_code) + ".";
+    else if (e.kind === "report") text = who(e.actor_name, e.actor_code) + " reported " + who(e.target_name, e.target_code) + (e.note ? ": " + e.note : ".");
+    else text = e.kind;
+    box.appendChild(el("div", "", text));
+    box.appendChild(el("div", "time", timeAgo(e.created_at)));
+    if (e.target_code) {
+      const b = el("button", "sec tiny", "Find the reported / blocked user");
+      b.style.marginTop = "8px";
+      b.onclick = () => { $("search").value = String(e.target_code); setTab("users"); };
+      box.appendChild(b);
+    }
+    list.appendChild(box);
+  });
+  $("noAlerts").classList.toggle("hidden", rows.length > 0);
+  await sb.rpc("admin_mark_events_read");
+  refreshBadges();
+}
+
+/* user detail */
+async function openUser(u) {
+  cur = u;
+  paintAvatar($("dAv"), u.avatar_url, u.display_name);
+  $("dName").textContent = u.display_name;
+  $("dId").textContent = "ID: " + u.user_code;
+  $("dText").value = "";
+  msg("dMsg", "");
+  show("detail");
+  await loadThread();
+  refreshBadges();
+}
+
+async function loadThread() {
+  const { data } = await sb.rpc("admin_thread", { uid: cur.id });
+  const t = $("dThread");
+  t.textContent = "";
+  (data || []).forEach((m) => {
+    const b = el("div", "bubble " + (m.sender === "admin" ? "me" : "them"));
+    b.appendChild(el("small", "", (m.sender === "admin" ? "Memo (you)" : cur.display_name) + " \u2022 " + timeAgo(m.created_at)));
+    b.appendChild(document.createTextNode(m.body));
+    t.appendChild(b);
+  });
+  t.scrollTop = t.scrollHeight;
+}
+
+async function send(warning) {
+  const text = $("dText").value.trim();
+  if (!text) return msg("dMsg", "Write a message first.");
+  if (warning && !confirm("Send this as a warning to " + cur.display_name + "?")) return;
+  $("dSend").disabled = true; $("dWarn").disabled = true;
+  const { error } = await sb.rpc("admin_send_message", { uid: cur.id, body: text, warning });
+  $("dSend").disabled = false; $("dWarn").disabled = false;
+  if (error) return msg("dMsg", "Could not send. Try again.");
+  $("dText").value = "";
+  msg("dMsg", warning ? "Warning sent." : "Message sent from Memo.", true);
+  loadThread();
+}
+$("dSend").onclick = () => send(false);
+$("dWarn").onclick = () => send(true);
+
+$("dBack").onclick = () => { show("app"); setTab(tab); };
+
+$("dBlock").onclick = async () => {
+  if (!confirm("Permanently block " + cur.display_name + " (ID " + cur.user_code + ")?\n\nTheir account, photos, posts and contacts will be deleted. Their ID will be given to a new user, and their mobile number can no longer sign up. This cannot be undone.")) return;
+  const { error } = await sb.rpc("admin_block_user", { target: cur.id });
+  if (error) return msg("dMsg", "Could not block this user.");
+  show("app");
+  setTab("users");
+  msg("appMsg", cur.display_name + " has been blocked. ID " + cur.user_code + " is free to be reused.", true);
+};
+
+/* start */
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session && (await enter())) return;
+  show("login");
+})();
+</script>
+</body>
+</html>
