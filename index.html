@@ -6,49 +6,66 @@
 <meta name="theme-color" content="#0f172a">
 <title>Memo</title>
 <style>
-:root{--bg:#0f172a;--card:#1e293b;--text:#f1f5f9;--muted:#94a3b8;--accent:#22c55e;--err:#f87171}
+:root{--bg:#0f172a;--card:#1e293b;--inset:#0f172a;--line:#334155;--text:#f1f5f9;--muted:#94a3b8;--accent:#22c55e;--ok:#22c55e;--err:#f87171;--warnbg:#422006;--warntx:#fde68a;--infobg:#082f49;--infotx:#bae6fd;--avbg:#334155;--avtx:#e2e8f0;--link:#38bdf8}
+:root[data-theme="light"]{--bg:#f1f5f9;--card:#ffffff;--inset:#f1f5f9;--line:#cbd5e1;--text:#0f172a;--muted:#64748b;--ok:#15803d;--err:#dc2626;--warnbg:#fef3c7;--warntx:#78350f;--infobg:#e0f2fe;--infotx:#075985;--avbg:#e2e8f0;--avtx:#334155;--link:#0369a1}
 *{box-sizing:border-box}
-body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Noto Sans Bengali",sans-serif;padding:16px}
-.card{width:100%;max-width:420px;background:var(--card);border-radius:16px;padding:24px}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Noto Sans Bengali",sans-serif;padding:16px;position:relative}
+.theme{position:absolute;top:10px;right:12px;width:auto;margin:0;padding:6px 11px;border-radius:20px;background:var(--card);color:var(--text);border:1px solid var(--line);font-size:16px}
+.card{width:100%;max-width:420px;background:var(--card);border-radius:16px;padding:24px;margin-top:34px}
 h1{margin:0 0 4px;font-size:26px}
+h2{margin:0;font-size:17px}
 .sub{color:var(--muted);margin:0 0 12px;font-size:14px}
 label{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px}
-input,textarea{width:100%;padding:12px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:var(--text);font-size:16px;font-family:inherit}
+input,textarea{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--inset);color:var(--text);font-size:16px;font-family:inherit}
 textarea{resize:vertical;min-height:70px}
-button,.btnlink{display:block;width:100%;margin-top:18px;padding:13px;border:0;border-radius:10px;background:var(--accent);color:#052e16;font-size:16px;font-weight:600;text-align:center;text-decoration:none}
-button.sec{background:transparent;color:var(--text);border:1px solid #334155;margin-top:10px}
-button.danger{background:transparent;color:var(--err);border:1px solid #7f1d1d}
+button,.btnlink{display:block;width:100%;margin-top:18px;padding:13px;border:0;border-radius:10px;background:var(--accent);color:#052e16;font-size:16px;font-weight:600;text-align:center;text-decoration:none;cursor:pointer}
+button.sec{background:transparent;color:var(--text);border:1px solid var(--line);margin-top:10px}
+button.danger{background:transparent;color:var(--err);border:1px solid var(--err);margin-top:10px}
 button.small{width:auto;margin:0;padding:12px 16px}
-button.tiny{width:auto;margin:0;padding:6px 10px;font-size:12px}
+button.tiny{width:auto;margin:0;padding:6px 10px;font-size:12px;font-weight:500}
 .btnlink.tg,button.tg{background:#0ea5e9;color:#fff}
-button:disabled{opacity:.6}
-a{color:#38bdf8;cursor:pointer}
+button:disabled{opacity:.55}
+a{color:var(--link);cursor:pointer}
 .link{display:block;text-align:center;margin-top:16px;font-size:14px}
 .msg{margin-top:14px;font-size:14px;min-height:18px}
-.err{color:var(--err)}.ok{color:var(--accent)}
-.box{background:#0f172a;border-radius:10px;padding:12px;margin-top:6px;font-size:20px;letter-spacing:1px;word-break:break-all}
-.warn{background:#422006;color:#fde68a;border-radius:10px;padding:10px;font-size:13px;margin-top:14px}
-.info{background:#082f49;color:#bae6fd;border-radius:10px;padding:10px;font-size:13px;margin-top:14px}
+.err{color:var(--err)}.ok{color:var(--ok)}
+.box{background:var(--inset);border-radius:10px;padding:12px;margin-top:6px;font-size:20px;letter-spacing:1px;word-break:break-all}
+.warn{background:var(--warnbg);color:var(--warntx);border-radius:10px;padding:10px;font-size:13px;margin-top:14px}
+.info{background:var(--infobg);color:var(--infotx);border-radius:10px;padding:10px;font-size:13px;margin-top:14px}
 .hidden{display:none}
 .row{display:flex;gap:10px;align-items:center}
-.av{width:56px;height:56px;border-radius:50%;background:#334155;color:#e2e8f0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:22px;overflow:hidden;flex:none}
+.topbar{display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px}
+.bell{position:relative}
+.badge{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;border-radius:9px;background:var(--err);color:#fff;font-size:11px;line-height:18px;text-align:center;padding:0 4px}
+.av{width:56px;height:56px;border-radius:50%;background:var(--avbg);color:var(--avtx);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:22px;overflow:hidden;flex:none}
 .av.big{width:110px;height:110px;font-size:44px;margin:0 auto}
 .av img{width:100%;height:100%;object-fit:cover}
 .sec-title{font-size:13px;color:var(--muted);margin:22px 0 8px;text-transform:uppercase;letter-spacing:.5px}
-.contact{display:flex;gap:12px;align-items:center;padding:10px;border-radius:10px;background:#0f172a;margin-top:8px;cursor:pointer}
+.contact{display:flex;gap:12px;align-items:center;padding:10px;border-radius:10px;background:var(--inset);margin-top:8px;cursor:pointer}
 .contact .av{width:44px;height:44px;font-size:18px}
 .contact b{display:block;font-size:15px}
 .contact span{font-size:12px;color:var(--muted)}
-.contact span.on{color:var(--accent)}
+.contact span.on{color:var(--ok)}
 .center{text-align:center}
-.post{background:#0f172a;border-radius:12px;padding:12px;margin-top:10px}
+.post{background:var(--inset);border-radius:12px;padding:12px;margin-top:10px}
 .post .av{width:38px;height:38px;font-size:16px}
 .post .body{white-space:pre-wrap;word-break:break-word;margin-top:10px;font-size:15px}
 .post img.pic{display:block;width:100%;max-height:340px;object-fit:cover;border-radius:10px;margin-top:10px}
 .post .time{font-size:12px;color:var(--muted)}
+.notif{background:var(--inset);border-radius:12px;padding:12px;margin-top:10px;font-size:14px;word-break:break-word;border:1px solid transparent}
+.notif.new{border-color:var(--accent)}
+.notif.warning{border-color:var(--err)}
+.notif .time{font-size:12px;color:var(--muted);margin-top:4px}
+.bubble{max-width:85%;padding:10px 12px;border-radius:12px;margin-top:8px;font-size:14px;word-break:break-word;white-space:pre-wrap}
+.bubble.me{background:var(--accent);color:#052e16;margin-left:auto}
+.bubble.them{background:var(--inset)}
+.bubble small{display:block;font-size:11px;opacity:.7;margin-bottom:2px}
+.thread{max-height:340px;overflow-y:auto;margin-top:10px}
 </style>
 </head>
 <body>
+
+<button class="theme" id="themeBtn" title="Switch light/dark mode">&#9788;</button>
 
 <div class="card" id="signup">
   <h1>Memo</h1>
@@ -106,16 +123,16 @@ a{color:#38bdf8;cursor:pointer}
 </div>
 
 <div class="card hidden" id="home">
+  <div class="topbar">
+    <button class="sec tiny bell" id="bellBtn" title="Notifications">&#128276;<span class="badge hidden" id="badge">0</span></button>
+    <button class="sec tiny" id="editBtn">Edit Profile</button>
+  </div>
   <div class="row">
     <div class="av" id="homeAv"></div>
     <div style="min-width:0">
       <h1 id="hello" style="font-size:20px;margin:0;word-break:break-word"></h1>
       <div class="sub" style="margin:2px 0 0" id="myId"></div>
     </div>
-  </div>
-  <div class="row" style="margin-top:14px">
-    <button class="sec small" style="flex:1;margin:0" id="editBtn">Edit Profile</button>
-    <button class="sec small" style="flex:1;margin:0" id="pwBtn">Change Password</button>
   </div>
 
   <div class="sec-title">New post</div>
@@ -135,15 +152,12 @@ a{color:#38bdf8;cursor:pointer}
     <input id="addId" type="tel" inputmode="numeric" placeholder="Enter friend's ID">
     <button class="small" id="addBtn">Add</button>
   </div>
-  <p class="sub" style="margin-top:8px">You are connected when both of you have saved each other's ID.</p>
 
   <div class="sec-title">Contacts</div>
   <div id="contactList"></div>
   <p class="sub" id="noContacts">No contacts yet. Add a friend using their ID.</p>
 
-  <p class="sub" id="tgState" style="margin-top:20px"></p>
-  <button id="tgConnectBtn" class="tg hidden" style="margin-top:0">Connect Telegram</button>
-  <p class="sub" style="margin-top:16px">Messaging is coming in the next update.</p>
+  <button class="sec" id="supportBtn">Message Memo (admin)</button>
   <button class="sec" id="logoutBtn">Log Out</button>
   <div class="msg" id="homeMsg"></div>
 </div>
@@ -156,32 +170,67 @@ a{color:#38bdf8;cursor:pointer}
   <label for="pName">Name</label>
   <input id="pName" type="text" maxlength="60">
   <button id="saveProfile">Save</button>
-  <button class="sec" onclick="backHome()">Back</button>
   <div class="msg" id="profileMsg"></div>
-</div>
 
-<div class="card hidden" id="password">
-  <h1>Change Password</h1>
+  <div class="sec-title">Telegram</div>
+  <p class="sub" id="tgState"></p>
+  <button id="tgConnectBtn" class="tg hidden" style="margin-top:0">Connect Telegram</button>
+
+  <div class="sec-title">Change password</div>
   <label for="curPw">Current password</label>
   <input id="curPw" type="password" autocomplete="current-password">
   <label for="newPw">New password (at least 8 characters)</label>
   <input id="newPw" type="password" autocomplete="new-password">
   <label for="newPw2">Confirm new password</label>
   <input id="newPw2" type="password" autocomplete="new-password">
-  <button id="savePw">Update Password</button>
-  <button class="sec" onclick="backHome()">Back</button>
+  <button class="sec" id="savePw">Update Password</button>
   <div class="msg" id="pwMsg"></div>
+
+  <button class="sec" onclick="backHome()">Back</button>
 </div>
 
 <div class="card hidden" id="contact">
   <div class="av big" id="cAv"></div>
   <h1 class="center" id="cName" style="margin-top:14px;word-break:break-word"></h1>
   <p class="sub center" id="cId"></p>
-  <p class="center" id="cStatus" style="font-size:14px"></p>
-  <button disabled>Message (coming soon)</button>
+  <p class="center" id="cNote" style="font-size:14px"></p>
+  <button id="sendReqBtn" class="hidden">Send message request</button>
+  <button id="msgBtn" class="hidden" disabled>Message (coming soon)</button>
+  <div id="cPostsBox" class="hidden">
+    <div class="sec-title">Status</div>
+    <div id="cPosts"></div>
+    <p class="sub" id="cNoPosts">No active status.</p>
+  </div>
   <button class="sec" onclick="backHome()">Back</button>
-  <button class="danger" id="removeBtn" style="margin-top:10px">Remove contact</button>
+  <button class="danger" id="blockBtn">Block this user</button>
+  <button class="danger" id="reportBtn">Report to admin</button>
+  <button class="sec hidden" id="removeBtn">Remove from contacts</button>
   <div class="msg" id="cMsg"></div>
+</div>
+
+<div class="card hidden" id="notifs">
+  <h1>Notifications</h1>
+  <div id="notifList"></div>
+  <p class="sub" id="noNotifs">Nothing here yet.</p>
+  <button class="sec" onclick="backHome()">Back</button>
+  <div class="msg" id="notifMsg"></div>
+</div>
+
+<div class="card hidden" id="support">
+  <h1>Message Memo</h1>
+  <p class="sub">Write to the Memo admin. Replies appear here.</p>
+  <div class="thread" id="thread"></div>
+  <textarea id="supportText" maxlength="1000" placeholder="Write your message" style="margin-top:12px"></textarea>
+  <button id="supportSend">Send</button>
+  <button class="sec" onclick="backHome()">Back</button>
+  <div class="msg" id="supportMsg"></div>
+</div>
+
+<div class="card hidden" id="viewers">
+  <h1>Seen by</h1>
+  <div id="viewerList"></div>
+  <p class="sub" id="noViewers">No one has seen this yet.</p>
+  <button class="sec" onclick="backHome()">Back</button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -194,19 +243,37 @@ const BOT = "Memo70349bot";
 const AVATAR_PREFIX = SUPABASE_URL + "/storage/v1/object/public/avatars/";
 const sb = supabase.createClient(SUPABASE_URL, KEY);
 const $ = (id) => document.getElementById(id);
-const SCREENS = ["signup","creds","login","forgot","home","profile","password","contact"];
+const SCREENS = ["signup","creds","login","forgot","home","profile","contact","notifs","support","viewers"];
 
 let me = null;
 let contacts = [];
-let connected = new Set();
 let current = null;
 let newAvatarBlob = null;
 let postBlob = null;
+let feedPosts = [];
+let feedUrls = {};
+let people = {};
+let counts = {};
 
-function show(name) { SCREENS.forEach((s) => $(s).classList.toggle("hidden", s !== name)); }
+/* ---------- theme ---------- */
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  try { localStorage.setItem("memo-theme", t); } catch (e) {}
+  $("themeBtn").innerHTML = t === "dark" ? "&#9788;" : "&#9790;";
+  document.querySelector('meta[name="theme-color"]').content = t === "dark" ? "#0f172a" : "#f1f5f9";
+}
+(function () {
+  let t = null;
+  try { t = localStorage.getItem("memo-theme"); } catch (e) {}
+  if (t !== "light" && t !== "dark") t = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  setTheme(t);
+})();
+$("themeBtn").onclick = () => setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+
+/* ---------- helpers ---------- */
+function show(name) { SCREENS.forEach((s) => $(s).classList.toggle("hidden", s !== name)); window.scrollTo(0, 0); }
 function msg(id, text, ok) { const e = $(id); e.textContent = text || ""; e.className = "msg " + (ok ? "ok" : "err"); }
-function backHome() { show("home"); }
-
+function backHome() { show("home"); loadFeed(); }
 function normPhone(p) {
   const n = String(p).replace(/[\s-]/g, "");
   if (/^01\d{9}$/.test(n)) return "+88" + n;
@@ -253,7 +320,14 @@ function timeAgo(iso) {
   const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
   if (m < 1) return "just now";
   if (m < 60) return m + " min ago";
-  return Math.floor(m / 60) + " h ago";
+  if (m < 1440) return Math.floor(m / 60) + " h ago";
+  return Math.floor(m / 1440) + " d ago";
+}
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
 }
 
 /* ---------- signup / login / reset ---------- */
@@ -283,7 +357,7 @@ $("signupBtn").onclick = async () => {
 $("copyBtn").onclick = async () => {
   const text = "Memo ID: " + $("newId").textContent + "\nPassword: " + $("newPass").textContent;
   try { await navigator.clipboard.writeText(text); msg("credsMsg", "Copied.", true); }
-  catch { msg("credsMsg", "Copy failed. Please write them down."); }
+  catch (e) { msg("credsMsg", "Copy failed. Please write them down."); }
 };
 
 $("toLoginBtn").onclick = () => {
@@ -342,54 +416,44 @@ $("fpVerify").onclick = async () => {
 };
 
 /* ---------- home ---------- */
-async function refreshTg() {
-  const { data } = await sb.rpc("telegram_status");
-  $("tgState").textContent = data
-    ? "Telegram: connected. You can reset your password with an OTP."
-    : "Telegram: not connected. Connect it so you can reset your password if you forget it.";
-  $("tgConnectBtn").classList.toggle("hidden", !!data);
-}
-
-$("tgConnectBtn").onclick = async () => {
-  const { data, error } = await sb.rpc("create_telegram_link");
-  if (error || !data) return msg("homeMsg", "Could not create the link. Try again.");
-  window.location.href = "https://t.me/" + BOT + "?start=" + data;
-};
-
 function paintHome() {
   $("hello").textContent = me.display_name;
   $("myId").textContent = "ID: " + me.user_code;
   paintAvatar($("homeAv"), me.avatar_url, me.display_name);
 }
 
+async function refreshBadge() {
+  if (!me) return;
+  const { count } = await sb.from("notifications")
+    .select("id", { count: "exact", head: true }).eq("read", false);
+  const b = $("badge");
+  b.textContent = count > 99 ? "99+" : String(count || 0);
+  b.classList.toggle("hidden", !count);
+}
+
+function statusText(c) {
+  if (c.connected) return { text: "Connected", on: true };
+  const st = c.req_status, dir = c.req_direction;
+  if (!st) return { text: "Tap to send a message request" };
+  if (st === "pending" && dir === "sent") return { text: "Request sent" };
+  if (st === "pending" && dir === "received") return { text: "Sent you a request" };
+  if (st === "declined" && dir === "sent") return { text: "Request declined" };
+  return { text: "Tap to send a message request" };
+}
+
 async function loadContacts() {
-  const { data: rows } = await sb.from("contacts").select("contact").eq("owner", me.id);
-  const ids = (rows || []).map((r) => r.contact);
-  const { data: conn } = await sb.rpc("my_connections");
-  connected = new Set(conn || []);
-  contacts = [];
-  if (ids.length) {
-    const { data } = await sb.from("profiles")
-      .select("id, user_code, display_name, avatar_url").in("id", ids);
-    contacts = data || [];
-  }
+  const { data } = await sb.rpc("my_contacts");
+  contacts = data || [];
   const list = $("contactList");
   list.textContent = "";
   contacts.forEach((c) => {
-    const row = document.createElement("div");
-    row.className = "contact";
-    const av = document.createElement("div");
-    av.className = "av";
-    paintAvatar(av, c.avatar_url, c.display_name);
-    const box = document.createElement("div");
-    const nm = document.createElement("b");
-    nm.textContent = c.display_name;
-    const st = document.createElement("span");
-    const on = connected.has(c.id);
-    st.className = on ? "on" : "";
-    st.textContent = "ID: " + c.user_code + (on ? "  \u2022 Connected" : "  \u2022 Waiting for them to add you");
-    box.appendChild(nm);
-    box.appendChild(st);
+    const row = el("div", "contact");
+    const av = el("div", "av");
+    paintAvatar(av, c.connected ? c.avatar_url : null, c.display_name);
+    const box = el("div");
+    box.appendChild(el("b", "", c.display_name));
+    const s = statusText(c);
+    box.appendChild(el("span", s.on ? "on" : "", "ID: " + c.user_code + "  \u2022 " + s.text));
     row.appendChild(av);
     row.appendChild(box);
     row.onclick = () => openContact(c);
@@ -398,67 +462,77 @@ async function loadContacts() {
   $("noContacts").classList.toggle("hidden", contacts.length > 0);
 }
 
+function renderPost(p, container) {
+  const who = people[p.author] || { display_name: "Memo user", avatar_url: null };
+  const mine = p.author === me.id;
+  const box = el("div", "post");
+  const head = el("div", "row");
+  const av = el("div", "av");
+  paintAvatar(av, who.avatar_url, who.display_name);
+  const nameBox = el("div");
+  nameBox.style.flex = "1";
+  nameBox.appendChild(el("b", "", mine ? "You" : who.display_name));
+  nameBox.appendChild(el("div", "time", timeAgo(p.created_at)));
+  head.appendChild(av);
+  head.appendChild(nameBox);
+  if (mine) {
+    const del = el("button", "sec tiny", "Delete");
+    del.onclick = () => deletePost(p);
+    head.appendChild(del);
+  }
+  box.appendChild(head);
+  if (p.body) box.appendChild(el("div", "body", p.body));
+  if (p.image_path && feedUrls[p.image_path]) {
+    const img = el("img", "pic");
+    img.alt = "";
+    img.src = feedUrls[p.image_path];
+    box.appendChild(img);
+  }
+  if (mine) {
+    const seen = el("button", "sec tiny", "Seen by " + (counts[p.id] || 0));
+    seen.style.marginTop = "10px";
+    seen.onclick = () => openViewers(p);
+    box.appendChild(seen);
+  }
+  container.appendChild(box);
+}
+
 async function loadFeed() {
+  if (!me) return;
   const { data } = await sb.from("posts")
     .select("id, author, body, image_path, created_at")
     .order("created_at", { ascending: false }).limit(50);
-  const posts = data || [];
-  const paths = posts.filter((p) => p.image_path).map((p) => p.image_path);
-  const urls = {};
+  feedPosts = data || [];
+
+  feedUrls = {};
+  const paths = feedPosts.filter((p) => p.image_path).map((p) => p.image_path);
   if (paths.length) {
     const { data: signed } = await sb.storage.from("posts").createSignedUrls(paths, 3600);
-    (signed || []).forEach((s) => { if (s.signedUrl) urls[s.path] = s.signedUrl; });
+    (signed || []).forEach((s) => { if (s.signedUrl) feedUrls[s.path] = s.signedUrl; });
   }
-  const people = {};
+
+  people = {};
   people[me.id] = me;
-  contacts.forEach((c) => { people[c.id] = c; });
+  contacts.forEach((c) => { people[c.id] = { display_name: c.display_name, avatar_url: c.avatar_url }; });
+  const missing = [...new Set(feedPosts.map((p) => p.author))].filter((id) => !people[id]);
+  if (missing.length) {
+    const { data: ps } = await sb.from("profiles").select("id, display_name, avatar_url").in("id", missing);
+    (ps || []).forEach((p) => { people[p.id] = p; });
+  }
+
+  counts = {};
+  const mine = feedPosts.filter((p) => p.author === me.id).map((p) => p.id);
+  if (mine.length) {
+    const { data: cn } = await sb.rpc("post_view_counts", { ids: mine });
+    (cn || []).forEach((r) => { counts[r.post_id] = Number(r.n); });
+  }
+  const others = feedPosts.filter((p) => p.author !== me.id).map((p) => p.id);
+  if (others.length) sb.rpc("mark_seen", { ids: others });
 
   const feed = $("feed");
   feed.textContent = "";
-  posts.forEach((p) => {
-    const who = people[p.author] || { display_name: "Memo user", avatar_url: null };
-    const box = document.createElement("div");
-    box.className = "post";
-    const head = document.createElement("div");
-    head.className = "row";
-    const av = document.createElement("div");
-    av.className = "av";
-    paintAvatar(av, who.avatar_url, who.display_name);
-    const nameBox = document.createElement("div");
-    nameBox.style.flex = "1";
-    const nm = document.createElement("b");
-    nm.textContent = p.author === me.id ? "You" : who.display_name;
-    const tm = document.createElement("div");
-    tm.className = "time";
-    tm.textContent = timeAgo(p.created_at);
-    nameBox.appendChild(nm);
-    nameBox.appendChild(tm);
-    head.appendChild(av);
-    head.appendChild(nameBox);
-    if (p.author === me.id) {
-      const del = document.createElement("button");
-      del.className = "sec tiny";
-      del.textContent = "Delete";
-      del.onclick = () => deletePost(p);
-      head.appendChild(del);
-    }
-    box.appendChild(head);
-    if (p.body) {
-      const b = document.createElement("div");
-      b.className = "body";
-      b.textContent = p.body;
-      box.appendChild(b);
-    }
-    if (p.image_path && urls[p.image_path]) {
-      const img = document.createElement("img");
-      img.className = "pic";
-      img.alt = "";
-      img.src = urls[p.image_path];
-      box.appendChild(img);
-    }
-    feed.appendChild(box);
-  });
-  $("noFeed").classList.toggle("hidden", posts.length > 0);
+  feedPosts.forEach((p) => renderPost(p, feed));
+  $("noFeed").classList.toggle("hidden", feedPosts.length > 0);
 }
 
 async function loadHome() {
@@ -470,7 +544,7 @@ async function loadHome() {
   me = data;
   paintHome();
   show("home");
-  refreshTg();
+  refreshBadge();
   await loadContacts();
   loadFeed();
 }
@@ -487,33 +561,87 @@ $("addBtn").onclick = async () => {
   btn.disabled = false;
   if (e2) return msg("homeMsg", e2.code === "23505" ? "Already in your contacts." : "Could not add contact.");
   $("addId").value = "";
-  msg("homeMsg", "Contact added.", true);
+  msg("homeMsg", "Saved " + data[0].display_name + ". Open the contact to send a message request.", true);
+  loadContacts();
+};
+
+$("logoutBtn").onclick = async () => {
+  await sb.auth.signOut();
+  me = null; contacts = []; current = null; feedPosts = [];
+  show("login");
+};
+
+/* ---------- contact page ---------- */
+function openContact(c) {
+  current = c;
+  paintAvatar($("cAv"), c.connected ? c.avatar_url : null, c.display_name);
+  $("cName").textContent = c.display_name;
+  $("cId").textContent = "ID: " + c.user_code;
+  msg("cMsg", "");
+
+  const st = c.req_status, dir = c.req_direction;
+  let note = "", canSend = false;
+  if (c.connected) note = "Connected";
+  else if (!st) { canSend = true; note = "Send a message request. You can see their photo and status after they accept."; }
+  else if (st === "pending" && dir === "sent") note = "Request sent. Waiting for them to accept.";
+  else if (st === "pending" && dir === "received") note = "They sent you a request. Open Notifications to accept it.";
+  else if (st === "declined" && dir === "sent") note = "Your request was declined.";
+  else { canSend = true; note = "You can send your own request."; }
+
+  $("cNote").textContent = note;
+  $("cNote").style.color = c.connected ? "var(--ok)" : "var(--muted)";
+  $("sendReqBtn").classList.toggle("hidden", !canSend);
+  $("msgBtn").classList.toggle("hidden", !c.connected);
+  $("removeBtn").classList.toggle("hidden", c.connected);
+
+  $("cPostsBox").classList.toggle("hidden", !c.connected);
+  const box = $("cPosts");
+  box.textContent = "";
+  if (c.connected) {
+    const theirs = feedPosts.filter((p) => p.author === c.id);
+    theirs.forEach((p) => renderPost(p, box));
+    $("cNoPosts").classList.toggle("hidden", theirs.length > 0);
+  }
+  show("contact");
+}
+
+$("sendReqBtn").onclick = async () => {
+  const id = current.id;
+  const { data, error } = await sb.rpc("send_request", { target: id });
+  if (error) return msg("cMsg", "Could not send the request.");
+  const text = { sent: "Request sent.", connected: "You are now connected.", exists: "Request already sent.",
+    blocked: "You cannot send a request to this user.", self: "That is you." }[data] || "Done.";
+  await loadContacts();
+  const upd = contacts.find((c) => c.id === id);
+  if (upd) openContact(upd);
+  msg("cMsg", text, true);
+  loadFeed();
+};
+
+$("removeBtn").onclick = async () => {
+  const { error } = await sb.from("contacts").delete().eq("owner", me.id).eq("contact", current.id);
+  if (error) return msg("cMsg", "Could not remove the contact.");
+  show("home");
+  msg("homeMsg", "Contact removed.", true);
+  loadContacts();
+};
+
+$("blockBtn").onclick = async () => {
+  if (!confirm("Block " + current.display_name + "? You will no longer see each other, and Memo admin will be notified.")) return;
+  const { error } = await sb.rpc("block_user", { target: current.id });
+  if (error) return msg("cMsg", "Could not block this user.");
+  show("home");
+  msg("homeMsg", "User blocked. Memo admin has been notified.", true);
   await loadContacts();
   loadFeed();
 };
 
-function openContact(c) {
-  current = c;
-  paintAvatar($("cAv"), c.avatar_url, c.display_name);
-  $("cName").textContent = c.display_name;
-  $("cId").textContent = "ID: " + c.user_code;
-  const on = connected.has(c.id);
-  $("cStatus").textContent = on
-    ? "Connected. You can see each other's posts."
-    : "Not connected yet. They need to save your ID too.";
-  $("cStatus").style.color = on ? "var(--accent)" : "var(--muted)";
-  msg("cMsg", "");
-  show("contact");
-}
-
-$("removeBtn").onclick = async () => {
-  if (!current) return;
-  const { error } = await sb.from("contacts").delete().eq("owner", me.id).eq("contact", current.id);
-  if (error) return msg("cMsg", "Could not remove contact.");
-  msg("homeMsg", "Contact removed.", true);
-  show("home");
-  await loadContacts();
-  loadFeed();
+$("reportBtn").onclick = async () => {
+  const reason = prompt("Tell Memo admin what happened (optional):");
+  if (reason === null) return;
+  const { error } = await sb.rpc("report_user", { target: current.id, reason });
+  if (error) return msg("cMsg", "Could not send the report.");
+  msg("cMsg", "Reported to Memo admin. You can also block this user.", true);
 };
 
 /* ---------- posts ---------- */
@@ -523,7 +651,7 @@ $("postPhoto").onchange = async (e) => {
   try {
     postBlob = await resizeImage(f, 1280, false, 0.8);
     $("photoLabel").textContent = "Photo added (tap to change)";
-  } catch { postBlob = null; msg("homeMsg", "Could not read that image."); }
+  } catch (err) { postBlob = null; msg("homeMsg", "Could not read that image."); }
 };
 
 $("postBtn").onclick = async () => {
@@ -556,13 +684,143 @@ async function deletePost(p) {
   loadFeed();
 }
 
-/* ---------- profile ---------- */
+async function openViewers(p) {
+  const list = $("viewerList");
+  list.textContent = "";
+  show("viewers");
+  const { data } = await sb.rpc("post_viewers", { pid: p.id });
+  const rows = data || [];
+  rows.forEach((v) => {
+    const row = el("div", "contact");
+    row.style.cursor = "default";
+    const av = el("div", "av");
+    paintAvatar(av, v.avatar_url, v.display_name);
+    const box = el("div");
+    box.appendChild(el("b", "", v.display_name));
+    box.appendChild(el("span", "", "ID: " + v.user_code + "  \u2022 " + timeAgo(v.viewed_at)));
+    row.appendChild(av);
+    row.appendChild(box);
+    list.appendChild(row);
+  });
+  $("noViewers").classList.toggle("hidden", rows.length > 0);
+}
+
+/* ---------- notifications ---------- */
+$("bellBtn").onclick = () => openNotifs();
+
+async function respond(reqId, accept) {
+  const { error } = await sb.rpc("respond_request", { req: reqId, accept });
+  if (error) return msg("notifMsg", "Could not update the request.");
+  await loadContacts();
+  openNotifs();
+}
+
+async function openNotifs() {
+  show("notifs");
+  msg("notifMsg", "");
+  const { data } = await sb.from("notifications")
+    .select("id, kind, data, read, created_at")
+    .order("created_at", { ascending: false }).limit(50);
+  const rows = data || [];
+  const list = $("notifList");
+  list.textContent = "";
+  rows.forEach((n) => {
+    const d = n.data || {};
+    const box = el("div", "notif" + (!n.read ? " new" : "") + (n.kind === "warning" ? " warning" : ""));
+    if (n.kind === "request_received") {
+      box.appendChild(el("div", "", (d.name || "Someone") + " sent you a message request."));
+      if (!n.read && d.request_id) {
+        const r = el("div", "row");
+        r.style.marginTop = "10px";
+        const a = el("button", "tiny", "Accept");
+        a.onclick = () => respond(d.request_id, true);
+        const x = el("button", "sec tiny", "Decline");
+        x.onclick = () => respond(d.request_id, false);
+        r.appendChild(a);
+        r.appendChild(x);
+        box.appendChild(r);
+      }
+    } else if (n.kind === "request_accepted") {
+      box.appendChild(el("div", "", (d.name || "Someone") + " accepted your request. You are now connected."));
+    } else if (n.kind === "warning") {
+      box.appendChild(el("div", "", "Warning from Memo: " + (d.body || "")));
+    } else if (n.kind === "admin_message") {
+      box.appendChild(el("div", "", "Message from Memo: " + (d.body || "")));
+      const o = el("button", "sec tiny", "Reply");
+      o.style.marginTop = "10px";
+      o.onclick = openSupport;
+      box.appendChild(o);
+    } else {
+      box.appendChild(el("div", "", "Notification"));
+    }
+    box.appendChild(el("div", "time", timeAgo(n.created_at)));
+    list.appendChild(box);
+  });
+  $("noNotifs").classList.toggle("hidden", rows.length > 0);
+  await sb.rpc("mark_notifications_read");
+  refreshBadge();
+}
+
+/* ---------- message Memo (admin) ---------- */
+$("supportBtn").onclick = () => openSupport();
+
+async function loadThread() {
+  const { data } = await sb.from("support_messages")
+    .select("id, sender, body, created_at").order("created_at", { ascending: true }).limit(100);
+  const t = $("thread");
+  t.textContent = "";
+  (data || []).forEach((m) => {
+    const b = el("div", "bubble " + (m.sender === "user" ? "me" : "them"));
+    b.appendChild(el("small", "", (m.sender === "user" ? "You" : "Memo") + " \u2022 " + timeAgo(m.created_at)));
+    b.appendChild(document.createTextNode(m.body));
+    t.appendChild(b);
+  });
+  t.scrollTop = t.scrollHeight;
+}
+
+async function openSupport() {
+  show("support");
+  msg("supportMsg", "");
+  await loadThread();
+  await sb.rpc("mark_support_read");
+}
+
+$("supportSend").onclick = async () => {
+  const text = $("supportText").value.trim();
+  if (!text) return;
+  const btn = $("supportSend");
+  btn.disabled = true;
+  const { error } = await sb.rpc("send_support_message", { msg: text });
+  btn.disabled = false;
+  if (error) return msg("supportMsg", "Could not send. Try again.");
+  $("supportText").value = "";
+  msg("supportMsg", "Sent. Memo admin will reply here.", true);
+  loadThread();
+};
+
+/* ---------- edit profile / telegram / password ---------- */
+async function refreshTg() {
+  const { data } = await sb.rpc("telegram_status");
+  $("tgState").textContent = data
+    ? "Connected. You can reset your password with an OTP sent to Telegram."
+    : "Not connected. Connect it so you can reset your password if you forget it.";
+  $("tgConnectBtn").classList.toggle("hidden", !!data);
+}
+
+$("tgConnectBtn").onclick = async () => {
+  const { data, error } = await sb.rpc("create_telegram_link");
+  if (error || !data) return msg("profileMsg", "Could not create the link. Try again.");
+  window.location.href = "https://t.me/" + BOT + "?start=" + data;
+};
+
 $("editBtn").onclick = () => {
   newAvatarBlob = null;
   $("pName").value = me.display_name;
   paintAvatar($("editAv"), me.avatar_url, me.display_name);
-  msg("profileMsg", "");
+  $("curPw").value = ""; $("newPw").value = ""; $("newPw2").value = "";
+  msg("profileMsg", ""); msg("pwMsg", "");
   show("profile");
+  refreshTg();
 };
 
 $("photo").onchange = async (e) => {
@@ -570,12 +828,12 @@ $("photo").onchange = async (e) => {
   if (!f) return;
   try {
     newAvatarBlob = await resizeImage(f, 320, true, 0.85);
-    const el = $("editAv");
-    el.textContent = "";
+    const box = $("editAv");
+    box.textContent = "";
     const img = document.createElement("img");
     img.src = URL.createObjectURL(newAvatarBlob);
-    el.appendChild(img);
-  } catch { msg("profileMsg", "Could not read that image."); }
+    box.appendChild(img);
+  } catch (err) { msg("profileMsg", "Could not read that image."); }
 };
 
 $("saveProfile").onclick = async () => {
@@ -596,16 +854,7 @@ $("saveProfile").onclick = async () => {
   if (error) return msg("profileMsg", "Could not save. Try again.");
   Object.assign(me, update);
   paintHome();
-  msg("profileMsg", "");
-  show("home");
-  loadFeed();
-};
-
-/* ---------- change password ---------- */
-$("pwBtn").onclick = () => {
-  $("curPw").value = ""; $("newPw").value = ""; $("newPw2").value = "";
-  msg("pwMsg", "");
-  show("password");
+  msg("profileMsg", "Saved.", true);
 };
 
 $("savePw").onclick = async () => {
@@ -622,19 +871,16 @@ $("savePw").onclick = async () => {
   btn.disabled = false;
   if (error) return msg("pwMsg", "Could not update the password.");
   $("curPw").value = ""; $("newPw").value = ""; $("newPw2").value = "";
-  msg("homeMsg", "Password updated.", true);
-  show("home");
+  msg("pwMsg", "Password updated.", true);
 };
 
-$("logoutBtn").onclick = async () => {
-  await sb.auth.signOut();
-  me = null; contacts = []; current = null; connected = new Set();
-  show("login");
-};
-
+/* ---------- refresh ---------- */
 document.addEventListener("visibilitychange", () => {
-  if (!document.hidden && !$("home").classList.contains("hidden")) { refreshTg(); loadFeed(); }
+  if (!document.hidden && me && !$("home").classList.contains("hidden")) {
+    refreshBadge(); loadContacts().then(loadFeed);
+  }
 });
+setInterval(() => { if (me && !document.hidden) refreshBadge(); }, 30000);
 
 (async () => {
   const { data: { session } } = await sb.auth.getSession();
