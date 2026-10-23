@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0f172a">
+<title>Memo</title>
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--text:#f1f5f9;--muted:#94a3b8;--accent:#22c55e;--err:#f87171}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Noto Sans Bengali",sans-serif;padding:16px}
+.card{width:100%;max-width:400px;background:var(--card);border-radius:16px;padding:24px}
+h1{margin:0 0 4px;font-size:28px}
+.sub{color:var(--muted);margin:0 0 12px;font-size:14px}
+label{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px}
+input{width:100%;padding:12px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:var(--text);font-size:16px}
+button{width:100%;margin-top:20px;padding:13px;border:0;border-radius:10px;background:var(--accent);color:#052e16;font-size:16px;font-weight:600}
+button.sec{background:transparent;color:var(--text);border:1px solid #334155;margin-top:10px}
+button:disabled{opacity:.6}
+a{color:#38bdf8;cursor:pointer}
+.link{display:block;text-align:center;margin-top:16px;font-size:14px}
+.msg{margin-top:14px;font-size:14px;min-height:18px}
+.err{color:var(--err)}.ok{color:var(--accent)}
+.box{background:#0f172a;border-radius:10px;padding:12px;margin-top:6px;font-size:20px;letter-spacing:1px;word-break:break-all}
+.warn{background:#422006;color:#fde68a;border-radius:10px;padding:10px;font-size:13px;margin-top:14px}
+.hidden{display:none}
+</style>
+</head>
+<body>
+
+<div class="card" id="signup">
+  <h1>Memo</h1>
+  <p class="sub">Create your account</p>
+  <label for="name">Name</label>
+  <input id="name" type="text" autocomplete="name" placeholder="Your name">
+  <label for="phone">Mobile Number</label>
+  <input id="phone" type="tel" autocomplete="tel" placeholder="01XXXXXXXXX">
+  <a class="link" style="margin-top:10px;text-align:left" onclick="show('login')">Already have an account</a>
+  <button id="signupBtn">Submit</button>
+  <div class="msg" id="signupMsg"></div>
+</div>
+
+<div class="card hidden" id="creds">
+  <h1>Account created</h1>
+  <p class="sub">Use these details to log in.</p>
+  <label>Your ID</label>
+  <div class="box" id="newId"></div>
+  <label>Your Password</label>
+  <div class="box" id="newPass"></div>
+  <div class="warn">Save your ID and password now. The password is shown only once.</div>
+  <button class="sec" id="copyBtn">Copy ID and Password</button>
+  <button id="toLoginBtn">Continue to Login</button>
+  <div class="msg" id="credsMsg"></div>
+</div>
+
+<div class="card hidden" id="login">
+  <h1>Memo</h1>
+  <p class="sub">Log in to your account</p>
+  <label for="loginId">ID</label>
+  <input id="loginId" type="tel" inputmode="numeric" autocomplete="username" placeholder="Your 10-digit ID">
+  <label for="loginPw">Password</label>
+  <input id="loginPw" type="password" autocomplete="current-password" placeholder="Password">
+  <a class="link" style="margin-top:10px;text-align:left" onclick="show('forgot')">Forget Password</a>
+  <button id="loginBtn">Log In</button>
+  <a class="link" onclick="show('signup')">Create a new account</a>
+  <div class="msg" id="loginMsg"></div>
+</div>
+
+<div class="card hidden" id="forgot">
+  <h1>Reset Password</h1>
+  <p class="sub">Enter the mobile number you used to sign up.</p>
+  <label for="fpPhone">Mobile Number</label>
+  <input id="fpPhone" type="tel" placeholder="01XXXXXXXXX">
+  <label for="fpOtp">OTP</label>
+  <input id="fpOtp" type="tel" inputmode="numeric" placeholder="OTP code">
+  <button id="fpBtn">Send OTP</button>
+  <a class="link" onclick="show('login')">Back to Login</a>
+  <div class="msg" id="fpMsg"></div>
+</div>
+
+<div class="card hidden" id="home">
+  <h1 id="hello">Welcome</h1>
+  <p class="sub">Your ID</p>
+  <div class="box" id="myId"></div>
+  <p class="sub" style="margin-top:20px">Chat features are coming in the next update.</p>
+  <button class="sec" id="logoutBtn">Log Out</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://yfeieoxxkwnbunfaubha.supabase.co";
+const KEY = "sb_publishable_NoKYjOBxR8Ev6ZulOx00mA_Fblx4wzA";
+const FUNCTION_URL = SUPABASE_URL + "/functions/v1/rapid-action";
+const sb = supabase.createClient(SUPABASE_URL, KEY);
+const $ = (id) => document.getElementById(id);
+
+function show(name) {
+  ["signup","creds","login","forgot","home"].forEach((s) =>
+    $(s).classList.toggle("hidden", s !== name));
+}
+function msg(id, text, ok) {
+  const e = $(id);
+  e.textContent = text || "";
+  e.className = "msg " + (ok ? "ok" : "err");
+}
+
+$("signupBtn").onclick = async () => {
+  const name = $("name").value.trim();
+  const phone = $("phone").value.trim();
+  if (!name || !phone) return msg("signupMsg", "Please enter your name and mobile number.");
+  const btn = $("signupBtn");
+  btn.disabled = true;
+  msg("signupMsg", "Creating your account...", true);
+  try {
+    const r = await fetch(FUNCTION_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: KEY },
+      body: JSON.stringify({ name, phone }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || "Signup failed.");
+    $("newId").textContent = d.id;
+    $("newPass").textContent = d.password;
+    $("name").value = "";
+    $("phone").value = "";
+    msg("signupMsg", "");
+    show("creds");
+  } catch (e) {
+    msg("signupMsg", e.message || "Something went wrong. Try again.");
+  }
+  btn.disabled = false;
+};
+
+$("copyBtn").onclick = async () => {
+  const text = "Memo ID: " + $("newId").textContent + "\nPassword: " + $("newPass").textContent;
+  try { await navigator.clipboard.writeText(text); msg("credsMsg", "Copied.", true); }
+  catch { msg("credsMsg", "Copy failed. Please write them down."); }
+};
+
+$("toLoginBtn").onclick = () => {
+  $("loginId").value = $("newId").textContent;
+  $("loginPw").value = "";
+  $("newPass").textContent = "";
+  show("login");
+};
+
+$("loginBtn").onclick = async () => {
+  const id = $("loginId").value.trim();
+  const pw = $("loginPw").value;
+  if (!/^\d{10,}$/.test(id) || !pw) return msg("loginMsg", "Enter your ID and password.");
+  const btn = $("loginBtn");
+  btn.disabled = true;
+  msg("loginMsg", "Logging in...", true);
+  const { error } = await sb.auth.signInWithPassword({ email: id + "@chatapp.local", password: pw });
+  btn.disabled = false;
+  if (error) return msg("loginMsg", "Incorrect ID or password.");
+  $("loginPw").value = "";
+  msg("loginMsg", "");
+  loadHome();
+};
+
+$("fpBtn").onclick = () => {
+  msg("fpMsg", "Password reset by OTP will be available in the next update.");
+};
+
+async function loadHome() {
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return show("login");
+  const { data } = await sb.from("profiles")
+    .select("user_code, display_name").eq("id", user.id).single();
+  $("hello").textContent = "Welcome, " + (data ? data.display_name : "");
+  $("myId").textContent = data ? data.user_code : "";
+  show("home");
+}
+
+$("logoutBtn").onclick = async () => {
+  await sb.auth.signOut();
+  show("login");
+};
+
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) loadHome(); else show("signup");
+})();
+</script>
+</body>
+</html>
