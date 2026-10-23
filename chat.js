@@ -6,12 +6,14 @@
 
   let localKeys = [], myKey = null;
   let initFor = null, retryAt = 0, channel = null;
-  let other = null, chatOpen = false, firstLoad = true, sending = false;
+  let mode = "dm", other = null, grp = null, gMembers = {};
+  let chatOpen = false, firstLoad = true, sending = false;
   let msgs = [], plain = {}, keyCache = {}, secretCache = {};
   let unread = {};
   let pollTimer = null;
   let rendered = {}, seenEl = null;
   let pending = null, blobCache = {}, rec = null;
+  let lastMissing = 0;
 
   /* ---------- styles and screen ---------- */
   const st = document.createElement("style");
@@ -38,9 +40,10 @@
   card.innerHTML =
     '<div class="row">' +
     '<button class="sec tiny" id="chatBack">&larr; Back</button>' +
+    '<div class="row" id="chatHead" style="flex:1;min-width:0">' +
     '<div class="av" id="chatAv" style="width:40px;height:40px;font-size:16px"></div>' +
     '<div style="min-width:0"><b id="chatName" style="word-break:break-word"></b>' +
-    '<div class="time" id="chatSub">&#128274; End-to-end encrypted</div></div></div>' +
+    '<div class="time" id="chatSub">&#128274; End-to-end encrypted</div></div></div></div>' +
     '<div class="chatbox" id="chatBox"></div>' +
     '<div class="pendbar hidden" id="pendBar"><span id="pendName"></span>' +
     '<button class="sec tiny" id="pendX">Remove</button></div>' +
@@ -184,6 +187,10 @@
       new TextEncoder().encode(JSON.stringify(obj)));
     return { iv: b64(iv), ciphertext: b64(new Uint8Array(ct)) };
   }
+  function parsePayload(pt) {
+    const o = JSON.parse(new TextDecoder().decode(pt));
+    return { ok: true, text: typeof o.t === "string" ? o.t : "", file: validFile(o.f) };
+  }
   async function decryptRow(row) {
     if (plain[row.id]) return plain[row.id];
     try {
@@ -196,8 +203,33 @@
       if (!theirKey) return { ok: false };
       const aes = await secret(local, theirKey);
       const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(row.iv) }, aes, unb64(row.ciphertext));
-      const o = JSON.parse(new TextDecoder().decode(pt));
-      const res = { ok: true, text: typeof o.t === "string" ? o.t : "", file: validFile(o.f) };
+      const res = parsePayload(pt);
+      plain[row.id] = res;
+      return res;
+    } catch (e) { return { ok: false }; }
+  }
+  async function decryptGroupRow(row) {
+    if (plain[row.id]) return plain[row.id];
+    try {
+      const w = row.wraps && row.wraps[me.id];
+      if (!w) return { ok: false };
+      let aes;
+      const localRecv = localKeys.find((k) => k.id === w.k);
+      if (localRecv) {
+        const sk = await keyById(row.sender_key);
+        if (!sk) return { ok: false };
+        aes = await secret(localRecv, sk);
+      } else {
+        const localSend = localKeys.find((k) => k.id === row.sender_key);
+        if (!localSend) return { ok: false };
+        const rk = await keyById(w.k);
+        if (!rk) return { ok: false };
+        aes = await secret(localSend, rk);
+      }
+      const raw = await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(w.i) }, aes, unb64(w.w));
+      const k = await crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["decrypt"]);
+      const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(row.iv) }, k, unb64(row.ciphertext));
+      const res = parsePayload(pt);
       plain[row.id] = res;
       return res;
     } catch (e) { return { ok: false }; }
@@ -330,7 +362,12 @@
   function buildBubble(m) {
     const mine = m.sender === me.id;
     const b = el("div", "bubble " + (mine ? "me" : "them"));
-    b.appendChild(el("small", "", new Date(m.created_at).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })));
+    let label = new Date(m.created_at).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+    if (mode === "group" && !mine) {
+      const p = gMembers[m.sender];
+      label = (p ? p.display_name : "Former member") + " \u2022 " + label;
+    }
+    b.appendChild(el("small", "", label));
     if (!m.ok) {
       b.appendChild(document.createTextNode("\uD83D\uDD12 This message can't be opened on this device."));
       return b;
@@ -357,7 +394,7 @@
       added = true;
     });
     const last = msgs[msgs.length - 1];
-    if (last && last.sender === me.id && last.read_at) {
+    if (mode === "dm" && last && last.sender === me.id && last.read_at) {
       if (!seenEl) { seenEl = el("div", "time", "Seen"); seenEl.style.textAlign = "right"; }
       box.appendChild(seenEl);
     }
@@ -365,7 +402,40 @@
     firstLoad = false;
   }
 
-  async function loadChat() {
+  /* ---------- group info and permissions ---------- */
+  async function refreshGroup(gid) {
+    const [r1, r2] = await Promise.all([sb.rpc("my_groups"), sb.rpc("get_group_members", { gid: gid })]);
+    const g = (r1.data || []).find((x) => x.id === gid);
+    if (!g) return false;
+    grp = g;
+    gMembers = {};
+    (r2.data || []).forEach((m) => { gMembers[m.user_id] = m; });
+    $("chatName").textContent = g.name;
+    $("chatSub").textContent = "\uD83D\uDD12 " + g.member_count + " members \u2022 tap here for group info";
+    return true;
+  }
+
+  const LOCK_TEXT = "Only group admins can send messages here.";
+  function lockUI() {
+    const locked = mode === "group" && grp && grp.only_admins && grp.my_role !== "admin";
+    $("chatText").disabled = !!locked;
+    const dis = !!locked || sending;
+    ["attachBtn", "micBtn", "chatSend"].forEach((id) => { $(id).disabled = dis; });
+    if (locked) msg("chatMsg", LOCK_TEXT, true);
+    else if ($("chatMsg").textContent === LOCK_TEXT) msg("chatMsg", "");
+  }
+
+  $("chatHead").onclick = () => {
+    if (mode === "group" && grp && window.openGroupInfo) {
+      if (rec) stopRec(true);
+      chatOpen = false;
+      clearInterval(pollTimer);
+      window.openGroupInfo(grp);
+    }
+  };
+
+  /* ---------- loading messages ---------- */
+  async function loadDmChat() {
     if (!other || !me) return;
     const f = "and(sender.eq." + me.id + ",recipient.eq." + other.id + "),and(sender.eq." + other.id + ",recipient.eq." + me.id + ")";
     const { data, error } = await sb.from("messages")
@@ -385,6 +455,36 @@
       refreshUnread();
     }
   }
+
+  async function loadGroupChat() {
+    if (!grp || !me) return;
+    const gid = grp.id;
+    const ok = await refreshGroup(gid);
+    if (!ok) {
+      closeChat();
+      msg("homeMsg", "You are no longer in that group.", false);
+      return;
+    }
+    lockUI();
+    const { data, error } = await sb.from("group_messages")
+      .select("id, group_id, sender, sender_key, iv, ciphertext, wraps, created_at")
+      .eq("group_id", gid).order("created_at", { ascending: false }).limit(200);
+    if (error || !grp || grp.id !== gid) return;
+    const rows = (data || []).reverse();
+    const out = [];
+    for (const r of rows) {
+      const d = await decryptGroupRow(r);
+      out.push(Object.assign({}, r, d));
+    }
+    msgs = out;
+    renderMsgs();
+    if (rows.some((r) => r.sender !== me.id)) {
+      await sb.rpc("mark_group_read", { gid: gid });
+      if (window.refreshGroups) window.refreshGroups();
+    }
+  }
+
+  function loadChat() { return mode === "group" ? loadGroupChat() : loadDmChat(); }
 
   /* ---------- attachments and recording ---------- */
   function setPending(p) {
@@ -469,25 +569,56 @@
   $("micBtn").onclick = () => { if (rec) stopRec(false); else startRec(); };
   $("pendX").onclick = () => { if (rec) stopRec(true); else clearPending(); };
 
-  /* ---------- open / close / send ---------- */
-  window.openChat = async function (c) {
-    if (!c || !me) return;
-    other = c;
+  /* ---------- open / close ---------- */
+  function resetView() {
     msgs = [];
     rendered = {};
     seenEl = null;
     firstLoad = true;
     chatOpen = true;
     clearPending();
-    paintAvatar($("chatAv"), c.avatar_url, c.display_name);
-    $("chatName").textContent = c.display_name;
     msg("chatMsg", "");
     $("chatBox").textContent = "";
+    $("chatText").disabled = false;
+    ["attachBtn", "micBtn", "chatSend"].forEach((id) => { $(id).disabled = false; });
+  }
+  function startPolling() {
+    clearInterval(pollTimer);
+    pollTimer = setInterval(() => { if (chatOpen && !document.hidden) loadChat(); }, 5000);
+  }
+
+  window.openChat = async function (c) {
+    if (!c || !me) return;
+    mode = "dm";
+    grp = null;
+    other = c;
+    resetView();
+    paintAvatar($("chatAv"), c.avatar_url, c.display_name);
+    $("chatName").textContent = c.display_name;
+    $("chatSub").textContent = "\uD83D\uDD12 End-to-end encrypted";
     show("chat");
     if (!myKey) { try { await ensureKey(); } catch (e) { msg("chatMsg", "Secure chat could not start. Try again."); return; } }
     await loadChat();
-    clearInterval(pollTimer);
-    pollTimer = setInterval(() => { if (chatOpen && !document.hidden) loadChat(); }, 5000);
+    startPolling();
+  };
+
+  window.openGroupChat = async function (gid) {
+    if (!me) return;
+    mode = "group";
+    other = null;
+    grp = null;
+    gMembers = {};
+    resetView();
+    paintAvatar($("chatAv"), null, "G");
+    $("chatName").textContent = "Group";
+    $("chatSub").textContent = "Loading...";
+    show("chat");
+    const ok = await refreshGroup(gid);
+    if (!ok) { closeChat(); msg("homeMsg", "That group is not available.", false); return; }
+    paintAvatar($("chatAv"), null, grp.name);
+    if (!myKey) { try { await ensureKey(); } catch (e) { msg("chatMsg", "Secure chat could not start. Try again."); return; } }
+    await loadChat();
+    startPolling();
   };
 
   function closeChat() {
@@ -498,21 +629,63 @@
     revokeAll();
     rendered = {};
     other = null;
+    grp = null;
     show("home");
     loadContacts();
     refreshUnread();
+    if (window.refreshGroups) window.refreshGroups();
   }
   $("chatBack").onclick = closeChat;
 
   function setBusy(b) {
     sending = b;
-    $("chatSend").disabled = b;
-    $("attachBtn").disabled = b;
-    $("micBtn").disabled = b;
+    lockUI();
+  }
+
+  /* ---------- sending ---------- */
+  async function insertDm(payload, theirKey) {
+    const aes = await secret(myKey, theirKey);
+    const enc = await encryptPayload(aes, payload);
+    const { error } = await sb.from("messages").insert({
+      recipient: other.id, sender_key: myKey.id, recipient_key: theirKey.id,
+      iv: enc.iv, ciphertext: enc.ciphertext,
+    });
+    return error ? "Could not send. You may no longer be connected." : null;
+  }
+
+  async function insertGroup(payload) {
+    const { data: mem } = await sb.rpc("get_group_members", { gid: grp.id });
+    const ids = (mem || []).map((m) => m.user_id);
+    if (ids.indexOf(me.id) < 0) return "You are no longer in this group.";
+    const { data: ks } = await sb.from("user_keys").select("id, user_id, public_key, created_at")
+      .in("user_id", ids).order("created_at", { ascending: false });
+    const latest = {};
+    (ks || []).forEach((k) => { if (!latest[k.user_id]) latest[k.user_id] = k; keyCache[k.id] = k; });
+
+    const K = await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, true, ["encrypt"]);
+    const raw = new Uint8Array(await crypto.subtle.exportKey("raw", K));
+    const enc = await encryptPayload(K, payload);
+    const wraps = {};
+    lastMissing = 0;
+    for (const uid of ids) {
+      const rk = latest[uid];
+      if (!rk) { lastMissing++; continue; }
+      const aes = await secret(myKey, rk);
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const w = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, aes, raw));
+      wraps[uid] = { k: rk.id, i: b64(iv), w: b64(w) };
+    }
+    if (!wraps[me.id]) return "Secure chat could not start. Try again.";
+    const { error } = await sb.from("group_messages").insert({
+      group_id: grp.id, sender_key: myKey.id, iv: enc.iv, ciphertext: enc.ciphertext, wraps: wraps,
+    });
+    return error ? "Could not send. You may not be allowed to post in this group." : null;
   }
 
   $("chatSend").onclick = async () => {
-    if (sending || !other) return;
+    if (sending) return;
+    if (mode === "dm" && !other) return;
+    if (mode === "group" && !grp) return;
     if (rec) return msg("chatMsg", "Stop the recording first (tap the mic).");
     const text = $("chatText").value.trim();
     if (!text && !pending) return;
@@ -521,28 +694,29 @@
     let uploaded = null;
     try {
       if (!myKey) await ensureKey();
-      const theirKey = await latestKey(other.id);
-      if (!theirKey) throw new Error("They need to open Memo once to turn on secure chat.");
-      const aes = await secret(myKey, theirKey);
+      let theirKey = null;
+      if (mode === "dm") {
+        theirKey = await latestKey(other.id);
+        if (!theirKey) throw new Error("They need to open Memo once to turn on secure chat.");
+      }
       const payload = { t: text };
       if (pending) {
         msg("chatMsg", "Encrypting and uploading...", true);
         uploaded = await uploadPending();
         payload.f = uploaded;
       }
-      const enc = await encryptPayload(aes, payload);
-      const { error } = await sb.from("messages").insert({
-        recipient: other.id, sender_key: myKey.id, recipient_key: theirKey.id,
-        iv: enc.iv, ciphertext: enc.ciphertext,
-      });
-      if (error) {
+      const err = mode === "group" ? await insertGroup(payload) : await insertDm(payload, theirKey);
+      if (err) {
         if (uploaded) sb.storage.from("chatfiles").remove([uploaded.path]);
-        throw new Error("Could not send. You may no longer be connected.");
+        throw new Error(err);
       }
       $("chatText").value = "";
       $("chatText").style.height = "44px";
       clearPending();
       msg("chatMsg", "");
+      if (mode === "group" && lastMissing > 0) {
+        msg("chatMsg", lastMissing + " member(s) have not opened Memo recently and cannot read this message.", true);
+      }
       await loadChat();
     } catch (e) { msg("chatMsg", e.message || "Could not send."); }
     setBusy(false);
@@ -555,10 +729,18 @@
   /* ---------- realtime ---------- */
   function subscribe() {
     if (channel) return;
-    const handler = () => { if (chatOpen) loadChat(); else refreshUnread(); };
+    const handler = (p) => {
+      if (p && p.table === "group_messages") {
+        const gid = p.new && p.new.group_id;
+        if (chatOpen && mode === "group" && grp && gid === grp.id) loadChat();
+        else if (window.refreshGroups) window.refreshGroups();
+      } else if (chatOpen && mode === "dm") loadChat();
+      else refreshUnread();
+    };
     channel = sb.channel("memo-msgs-" + me.id)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, handler)
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages" }, handler)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "group_messages" }, handler)
       .subscribe();
   }
 
@@ -581,7 +763,7 @@
     if (channel) { sb.removeChannel(channel); channel = null; }
     clearInterval(pollTimer);
     revokeAll();
-    myKey = null; localKeys = []; other = null; chatOpen = false;
+    myKey = null; localKeys = []; other = null; grp = null; gMembers = {}; chatOpen = false;
     msgs = []; plain = {}; keyCache = {}; secretCache = {}; unread = {};
     rendered = {}; seenEl = null; pending = null;
     initFor = null;
@@ -597,4 +779,9 @@
   mb.disabled = false;
   mb.textContent = "Message";
   mb.onclick = () => { if (current) window.openChat(current); };
+
+  /* ---------- groups screens ---------- */
+  const gs = document.createElement("script");
+  gs.src = "groups.js";
+  document.body.appendChild(gs);
 })();
