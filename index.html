@@ -9,14 +9,18 @@
 :root{--bg:#0f172a;--card:#1e293b;--text:#f1f5f9;--muted:#94a3b8;--accent:#22c55e;--err:#f87171}
 *{box-sizing:border-box}
 body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Noto Sans Bengali",sans-serif;padding:16px}
-.card{width:100%;max-width:400px;background:var(--card);border-radius:16px;padding:24px}
-h1{margin:0 0 4px;font-size:28px}
+.card{width:100%;max-width:420px;background:var(--card);border-radius:16px;padding:24px}
+h1{margin:0 0 4px;font-size:26px}
 .sub{color:var(--muted);margin:0 0 12px;font-size:14px}
 label{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px}
-input{width:100%;padding:12px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:var(--text);font-size:16px}
-button,.btnlink{display:block;width:100%;margin-top:20px;padding:13px;border:0;border-radius:10px;background:var(--accent);color:#052e16;font-size:16px;font-weight:600;text-align:center;text-decoration:none}
+input,textarea{width:100%;padding:12px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:var(--text);font-size:16px;font-family:inherit}
+textarea{resize:vertical;min-height:70px}
+button,.btnlink{display:block;width:100%;margin-top:18px;padding:13px;border:0;border-radius:10px;background:var(--accent);color:#052e16;font-size:16px;font-weight:600;text-align:center;text-decoration:none}
 button.sec{background:transparent;color:var(--text);border:1px solid #334155;margin-top:10px}
-.btnlink.tg{background:#0ea5e9;color:#fff;margin-top:12px}
+button.danger{background:transparent;color:var(--err);border:1px solid #7f1d1d}
+button.small{width:auto;margin:0;padding:12px 16px}
+button.tiny{width:auto;margin:0;padding:6px 10px;font-size:12px}
+.btnlink.tg,button.tg{background:#0ea5e9;color:#fff}
 button:disabled{opacity:.6}
 a{color:#38bdf8;cursor:pointer}
 .link{display:block;text-align:center;margin-top:16px;font-size:14px}
@@ -26,6 +30,22 @@ a{color:#38bdf8;cursor:pointer}
 .warn{background:#422006;color:#fde68a;border-radius:10px;padding:10px;font-size:13px;margin-top:14px}
 .info{background:#082f49;color:#bae6fd;border-radius:10px;padding:10px;font-size:13px;margin-top:14px}
 .hidden{display:none}
+.row{display:flex;gap:10px;align-items:center}
+.av{width:56px;height:56px;border-radius:50%;background:#334155;color:#e2e8f0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:22px;overflow:hidden;flex:none}
+.av.big{width:110px;height:110px;font-size:44px;margin:0 auto}
+.av img{width:100%;height:100%;object-fit:cover}
+.sec-title{font-size:13px;color:var(--muted);margin:22px 0 8px;text-transform:uppercase;letter-spacing:.5px}
+.contact{display:flex;gap:12px;align-items:center;padding:10px;border-radius:10px;background:#0f172a;margin-top:8px;cursor:pointer}
+.contact .av{width:44px;height:44px;font-size:18px}
+.contact b{display:block;font-size:15px}
+.contact span{font-size:12px;color:var(--muted)}
+.contact span.on{color:var(--accent)}
+.center{text-align:center}
+.post{background:#0f172a;border-radius:12px;padding:12px;margin-top:10px}
+.post .av{width:38px;height:38px;font-size:16px}
+.post .body{white-space:pre-wrap;word-break:break-word;margin-top:10px;font-size:15px}
+.post img.pic{display:block;width:100%;max-height:340px;object-fit:cover;border-radius:10px;margin-top:10px}
+.post .time{font-size:12px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -86,14 +106,82 @@ a{color:#38bdf8;cursor:pointer}
 </div>
 
 <div class="card hidden" id="home">
-  <h1 id="hello">Welcome</h1>
-  <p class="sub">Your ID</p>
-  <div class="box" id="myId"></div>
-  <p class="sub" id="tgState" style="margin-top:16px"></p>
-  <button id="tgConnectBtn" class="hidden" style="background:#0ea5e9;color:#fff;margin-top:0">Connect Telegram</button>
-  <p class="sub" style="margin-top:20px">Chat features are coming in the next update.</p>
+  <div class="row">
+    <div class="av" id="homeAv"></div>
+    <div style="min-width:0">
+      <h1 id="hello" style="font-size:20px;margin:0;word-break:break-word"></h1>
+      <div class="sub" style="margin:2px 0 0" id="myId"></div>
+    </div>
+  </div>
+  <div class="row" style="margin-top:14px">
+    <button class="sec small" style="flex:1;margin:0" id="editBtn">Edit Profile</button>
+    <button class="sec small" style="flex:1;margin:0" id="pwBtn">Change Password</button>
+  </div>
+
+  <div class="sec-title">New post</div>
+  <textarea id="postText" maxlength="500" placeholder="Share a short note or photo with your connections (disappears in 24 hours)"></textarea>
+  <div class="row" style="margin-top:10px">
+    <label for="postPhoto" style="margin:0;flex:1"><a id="photoLabel">Add photo</a></label>
+    <input id="postPhoto" type="file" accept="image/*" class="hidden">
+    <button class="small" id="postBtn">Post</button>
+  </div>
+
+  <div class="sec-title">Updates</div>
+  <div id="feed"></div>
+  <p class="sub" id="noFeed">No updates yet. Posts from connected members appear here for 24 hours.</p>
+
+  <div class="sec-title">Add contact</div>
+  <div class="row">
+    <input id="addId" type="tel" inputmode="numeric" placeholder="Enter friend's ID">
+    <button class="small" id="addBtn">Add</button>
+  </div>
+  <p class="sub" style="margin-top:8px">You are connected when both of you have saved each other's ID.</p>
+
+  <div class="sec-title">Contacts</div>
+  <div id="contactList"></div>
+  <p class="sub" id="noContacts">No contacts yet. Add a friend using their ID.</p>
+
+  <p class="sub" id="tgState" style="margin-top:20px"></p>
+  <button id="tgConnectBtn" class="tg hidden" style="margin-top:0">Connect Telegram</button>
+  <p class="sub" style="margin-top:16px">Messaging is coming in the next update.</p>
   <button class="sec" id="logoutBtn">Log Out</button>
   <div class="msg" id="homeMsg"></div>
+</div>
+
+<div class="card hidden" id="profile">
+  <h1>Edit Profile</h1>
+  <div class="av big" id="editAv" style="margin-top:14px"></div>
+  <label for="photo" class="center" style="margin-top:10px"><a>Change photo</a></label>
+  <input id="photo" type="file" accept="image/*" class="hidden">
+  <label for="pName">Name</label>
+  <input id="pName" type="text" maxlength="60">
+  <button id="saveProfile">Save</button>
+  <button class="sec" onclick="backHome()">Back</button>
+  <div class="msg" id="profileMsg"></div>
+</div>
+
+<div class="card hidden" id="password">
+  <h1>Change Password</h1>
+  <label for="curPw">Current password</label>
+  <input id="curPw" type="password" autocomplete="current-password">
+  <label for="newPw">New password (at least 8 characters)</label>
+  <input id="newPw" type="password" autocomplete="new-password">
+  <label for="newPw2">Confirm new password</label>
+  <input id="newPw2" type="password" autocomplete="new-password">
+  <button id="savePw">Update Password</button>
+  <button class="sec" onclick="backHome()">Back</button>
+  <div class="msg" id="pwMsg"></div>
+</div>
+
+<div class="card hidden" id="contact">
+  <div class="av big" id="cAv"></div>
+  <h1 class="center" id="cName" style="margin-top:14px;word-break:break-word"></h1>
+  <p class="sub center" id="cId"></p>
+  <p class="center" id="cStatus" style="font-size:14px"></p>
+  <button disabled>Message (coming soon)</button>
+  <button class="sec" onclick="backHome()">Back</button>
+  <button class="danger" id="removeBtn" style="margin-top:10px">Remove contact</button>
+  <div class="msg" id="cMsg"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -103,18 +191,22 @@ const KEY = "sb_publishable_NoKYjOBxR8Ev6ZulOx00mA_Fblx4wzA";
 const SIGNUP_FN = "rapid-action";
 const RESET_FN = "quick-api";
 const BOT = "Memo70349bot";
+const AVATAR_PREFIX = SUPABASE_URL + "/storage/v1/object/public/avatars/";
 const sb = supabase.createClient(SUPABASE_URL, KEY);
 const $ = (id) => document.getElementById(id);
+const SCREENS = ["signup","creds","login","forgot","home","profile","password","contact"];
 
-function show(name) {
-  ["signup","creds","login","forgot","home"].forEach((s) =>
-    $(s).classList.toggle("hidden", s !== name));
-}
-function msg(id, text, ok) {
-  const e = $(id);
-  e.textContent = text || "";
-  e.className = "msg " + (ok ? "ok" : "err");
-}
+let me = null;
+let contacts = [];
+let connected = new Set();
+let current = null;
+let newAvatarBlob = null;
+let postBlob = null;
+
+function show(name) { SCREENS.forEach((s) => $(s).classList.toggle("hidden", s !== name)); }
+function msg(id, text, ok) { const e = $(id); e.textContent = text || ""; e.className = "msg " + (ok ? "ok" : "err"); }
+function backHome() { show("home"); }
+
 function normPhone(p) {
   const n = String(p).replace(/[\s-]/g, "");
   if (/^01\d{9}$/.test(n)) return "+88" + n;
@@ -131,7 +223,40 @@ async function callFn(name, body) {
   if (!r.ok) throw new Error(d.error || "Something went wrong. Try again.");
   return d;
 }
+function paintAvatar(el, url, name) {
+  el.textContent = "";
+  if (url && String(url).startsWith(AVATAR_PREFIX)) {
+    const img = document.createElement("img");
+    img.alt = "";
+    img.src = url;
+    el.appendChild(img);
+  } else {
+    el.textContent = (name || "?").trim().charAt(0).toUpperCase();
+  }
+}
+async function resizeImage(file, maxSide, square, quality) {
+  const img = await createImageBitmap(file);
+  const c = document.createElement("canvas");
+  if (square) {
+    const s = Math.min(img.width, img.height);
+    c.width = c.height = maxSide;
+    c.getContext("2d").drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, maxSide, maxSide);
+  } else {
+    const k = Math.min(1, maxSide / Math.max(img.width, img.height));
+    c.width = Math.round(img.width * k);
+    c.height = Math.round(img.height * k);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+  }
+  return new Promise((res) => c.toBlob(res, "image/jpeg", quality));
+}
+function timeAgo(iso) {
+  const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return m + " min ago";
+  return Math.floor(m / 60) + " h ago";
+}
 
+/* ---------- signup / login / reset ---------- */
 $("signupBtn").onclick = async () => {
   const name = $("name").value.trim();
   const phone = normPhone($("phone").value);
@@ -151,9 +276,7 @@ $("signupBtn").onclick = async () => {
     $("phone").value = "";
     msg("signupMsg", "");
     show("creds");
-  } catch (e) {
-    msg("signupMsg", e.message);
-  }
+  } catch (e) { msg("signupMsg", e.message); }
   btn.disabled = false;
 };
 
@@ -192,12 +315,8 @@ $("fpSend").onclick = async () => {
   const btn = $("fpSend");
   btn.disabled = true;
   msg("fpMsg", "Sending...", true);
-  try {
-    const d = await callFn(RESET_FN, { action: "send", phone });
-    msg("fpMsg", d.message, true);
-  } catch (e) {
-    msg("fpMsg", e.message);
-  }
+  try { const d = await callFn(RESET_FN, { action: "send", phone }); msg("fpMsg", d.message, true); }
+  catch (e) { msg("fpMsg", e.message); }
   btn.disabled = false;
 };
 
@@ -218,12 +337,11 @@ $("fpVerify").onclick = async () => {
     $("fpOtp").value = "";
     msg("fpMsg", "");
     show("creds");
-  } catch (e) {
-    msg("fpMsg", e.message);
-  }
+  } catch (e) { msg("fpMsg", e.message); }
   btn.disabled = false;
 };
 
+/* ---------- home ---------- */
 async function refreshTg() {
   const { data } = await sb.rpc("telegram_status");
   $("tgState").textContent = data
@@ -238,24 +356,284 @@ $("tgConnectBtn").onclick = async () => {
   window.location.href = "https://t.me/" + BOT + "?start=" + data;
 };
 
+function paintHome() {
+  $("hello").textContent = me.display_name;
+  $("myId").textContent = "ID: " + me.user_code;
+  paintAvatar($("homeAv"), me.avatar_url, me.display_name);
+}
+
+async function loadContacts() {
+  const { data: rows } = await sb.from("contacts").select("contact").eq("owner", me.id);
+  const ids = (rows || []).map((r) => r.contact);
+  const { data: conn } = await sb.rpc("my_connections");
+  connected = new Set(conn || []);
+  contacts = [];
+  if (ids.length) {
+    const { data } = await sb.from("profiles")
+      .select("id, user_code, display_name, avatar_url").in("id", ids);
+    contacts = data || [];
+  }
+  const list = $("contactList");
+  list.textContent = "";
+  contacts.forEach((c) => {
+    const row = document.createElement("div");
+    row.className = "contact";
+    const av = document.createElement("div");
+    av.className = "av";
+    paintAvatar(av, c.avatar_url, c.display_name);
+    const box = document.createElement("div");
+    const nm = document.createElement("b");
+    nm.textContent = c.display_name;
+    const st = document.createElement("span");
+    const on = connected.has(c.id);
+    st.className = on ? "on" : "";
+    st.textContent = "ID: " + c.user_code + (on ? "  \u2022 Connected" : "  \u2022 Waiting for them to add you");
+    box.appendChild(nm);
+    box.appendChild(st);
+    row.appendChild(av);
+    row.appendChild(box);
+    row.onclick = () => openContact(c);
+    list.appendChild(row);
+  });
+  $("noContacts").classList.toggle("hidden", contacts.length > 0);
+}
+
+async function loadFeed() {
+  const { data } = await sb.from("posts")
+    .select("id, author, body, image_path, created_at")
+    .order("created_at", { ascending: false }).limit(50);
+  const posts = data || [];
+  const paths = posts.filter((p) => p.image_path).map((p) => p.image_path);
+  const urls = {};
+  if (paths.length) {
+    const { data: signed } = await sb.storage.from("posts").createSignedUrls(paths, 3600);
+    (signed || []).forEach((s) => { if (s.signedUrl) urls[s.path] = s.signedUrl; });
+  }
+  const people = {};
+  people[me.id] = me;
+  contacts.forEach((c) => { people[c.id] = c; });
+
+  const feed = $("feed");
+  feed.textContent = "";
+  posts.forEach((p) => {
+    const who = people[p.author] || { display_name: "Memo user", avatar_url: null };
+    const box = document.createElement("div");
+    box.className = "post";
+    const head = document.createElement("div");
+    head.className = "row";
+    const av = document.createElement("div");
+    av.className = "av";
+    paintAvatar(av, who.avatar_url, who.display_name);
+    const nameBox = document.createElement("div");
+    nameBox.style.flex = "1";
+    const nm = document.createElement("b");
+    nm.textContent = p.author === me.id ? "You" : who.display_name;
+    const tm = document.createElement("div");
+    tm.className = "time";
+    tm.textContent = timeAgo(p.created_at);
+    nameBox.appendChild(nm);
+    nameBox.appendChild(tm);
+    head.appendChild(av);
+    head.appendChild(nameBox);
+    if (p.author === me.id) {
+      const del = document.createElement("button");
+      del.className = "sec tiny";
+      del.textContent = "Delete";
+      del.onclick = () => deletePost(p);
+      head.appendChild(del);
+    }
+    box.appendChild(head);
+    if (p.body) {
+      const b = document.createElement("div");
+      b.className = "body";
+      b.textContent = p.body;
+      box.appendChild(b);
+    }
+    if (p.image_path && urls[p.image_path]) {
+      const img = document.createElement("img");
+      img.className = "pic";
+      img.alt = "";
+      img.src = urls[p.image_path];
+      box.appendChild(img);
+    }
+    feed.appendChild(box);
+  });
+  $("noFeed").classList.toggle("hidden", posts.length > 0);
+}
+
 async function loadHome() {
   const { data: { user } } = await sb.auth.getUser();
   if (!user) return show("login");
   const { data } = await sb.from("profiles")
-    .select("user_code, display_name").eq("id", user.id).single();
-  $("hello").textContent = "Welcome, " + (data ? data.display_name : "");
-  $("myId").textContent = data ? data.user_code : "";
+    .select("id, user_code, display_name, avatar_url").eq("id", user.id).single();
+  if (!data) return show("login");
+  me = data;
+  paintHome();
   show("home");
   refreshTg();
+  await loadContacts();
+  loadFeed();
 }
+
+$("addBtn").onclick = async () => {
+  const code = $("addId").value.trim();
+  if (!/^\d{10,}$/.test(code)) return msg("homeMsg", "Enter a valid ID.");
+  if (Number(code) === me.user_code) return msg("homeMsg", "That is your own ID.");
+  const btn = $("addBtn");
+  btn.disabled = true;
+  const { data, error } = await sb.rpc("find_user_by_code", { code: Number(code) });
+  if (error || !data || !data.length) { btn.disabled = false; return msg("homeMsg", "No user found with that ID."); }
+  const { error: e2 } = await sb.from("contacts").insert({ owner: me.id, contact: data[0].id });
+  btn.disabled = false;
+  if (e2) return msg("homeMsg", e2.code === "23505" ? "Already in your contacts." : "Could not add contact.");
+  $("addId").value = "";
+  msg("homeMsg", "Contact added.", true);
+  await loadContacts();
+  loadFeed();
+};
+
+function openContact(c) {
+  current = c;
+  paintAvatar($("cAv"), c.avatar_url, c.display_name);
+  $("cName").textContent = c.display_name;
+  $("cId").textContent = "ID: " + c.user_code;
+  const on = connected.has(c.id);
+  $("cStatus").textContent = on
+    ? "Connected. You can see each other's posts."
+    : "Not connected yet. They need to save your ID too.";
+  $("cStatus").style.color = on ? "var(--accent)" : "var(--muted)";
+  msg("cMsg", "");
+  show("contact");
+}
+
+$("removeBtn").onclick = async () => {
+  if (!current) return;
+  const { error } = await sb.from("contacts").delete().eq("owner", me.id).eq("contact", current.id);
+  if (error) return msg("cMsg", "Could not remove contact.");
+  msg("homeMsg", "Contact removed.", true);
+  show("home");
+  await loadContacts();
+  loadFeed();
+};
+
+/* ---------- posts ---------- */
+$("postPhoto").onchange = async (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  try {
+    postBlob = await resizeImage(f, 1280, false, 0.8);
+    $("photoLabel").textContent = "Photo added (tap to change)";
+  } catch { postBlob = null; msg("homeMsg", "Could not read that image."); }
+};
+
+$("postBtn").onclick = async () => {
+  const body = $("postText").value.trim();
+  if (!body && !postBlob) return msg("homeMsg", "Write something or add a photo.");
+  const btn = $("postBtn");
+  btn.disabled = true;
+  msg("homeMsg", "Posting...", true);
+  let path = null;
+  if (postBlob) {
+    path = me.id + "/" + Date.now() + ".jpg";
+    const { error } = await sb.storage.from("posts").upload(path, postBlob, { contentType: "image/jpeg" });
+    if (error) { btn.disabled = false; return msg("homeMsg", "Photo upload failed. Try again."); }
+  }
+  const { error } = await sb.from("posts").insert({ body: body || null, image_path: path });
+  btn.disabled = false;
+  if (error) return msg("homeMsg", "Could not post. Try again.");
+  $("postText").value = "";
+  postBlob = null;
+  $("postPhoto").value = "";
+  $("photoLabel").textContent = "Add photo";
+  msg("homeMsg", "Posted. It will disappear in 24 hours.", true);
+  loadFeed();
+};
+
+async function deletePost(p) {
+  const { error } = await sb.from("posts").delete().eq("id", p.id);
+  if (error) return msg("homeMsg", "Could not delete the post.");
+  if (p.image_path) await sb.storage.from("posts").remove([p.image_path]);
+  loadFeed();
+}
+
+/* ---------- profile ---------- */
+$("editBtn").onclick = () => {
+  newAvatarBlob = null;
+  $("pName").value = me.display_name;
+  paintAvatar($("editAv"), me.avatar_url, me.display_name);
+  msg("profileMsg", "");
+  show("profile");
+};
+
+$("photo").onchange = async (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  try {
+    newAvatarBlob = await resizeImage(f, 320, true, 0.85);
+    const el = $("editAv");
+    el.textContent = "";
+    const img = document.createElement("img");
+    img.src = URL.createObjectURL(newAvatarBlob);
+    el.appendChild(img);
+  } catch { msg("profileMsg", "Could not read that image."); }
+};
+
+$("saveProfile").onclick = async () => {
+  const name = $("pName").value.trim();
+  if (name.length < 2) return msg("profileMsg", "Name must be at least 2 characters.");
+  const btn = $("saveProfile");
+  btn.disabled = true;
+  msg("profileMsg", "Saving...", true);
+  const update = { display_name: name };
+  if (newAvatarBlob) {
+    const path = me.id + "/" + Date.now() + ".jpg";
+    const { error } = await sb.storage.from("avatars").upload(path, newAvatarBlob, { contentType: "image/jpeg" });
+    if (error) { btn.disabled = false; return msg("profileMsg", "Photo upload failed. Try again."); }
+    update.avatar_url = sb.storage.from("avatars").getPublicUrl(path).data.publicUrl;
+  }
+  const { error } = await sb.from("profiles").update(update).eq("id", me.id);
+  btn.disabled = false;
+  if (error) return msg("profileMsg", "Could not save. Try again.");
+  Object.assign(me, update);
+  paintHome();
+  msg("profileMsg", "");
+  show("home");
+  loadFeed();
+};
+
+/* ---------- change password ---------- */
+$("pwBtn").onclick = () => {
+  $("curPw").value = ""; $("newPw").value = ""; $("newPw2").value = "";
+  msg("pwMsg", "");
+  show("password");
+};
+
+$("savePw").onclick = async () => {
+  const cur = $("curPw").value, np = $("newPw").value, np2 = $("newPw2").value;
+  if (!cur || !np) return msg("pwMsg", "Fill in all fields.");
+  if (np.length < 8) return msg("pwMsg", "New password must be at least 8 characters.");
+  if (np !== np2) return msg("pwMsg", "New passwords do not match.");
+  const btn = $("savePw");
+  btn.disabled = true;
+  msg("pwMsg", "Updating...", true);
+  const chk = await sb.auth.signInWithPassword({ email: me.user_code + "@chatapp.local", password: cur });
+  if (chk.error) { btn.disabled = false; return msg("pwMsg", "Current password is incorrect."); }
+  const { error } = await sb.auth.updateUser({ password: np });
+  btn.disabled = false;
+  if (error) return msg("pwMsg", "Could not update the password.");
+  $("curPw").value = ""; $("newPw").value = ""; $("newPw2").value = "";
+  msg("homeMsg", "Password updated.", true);
+  show("home");
+};
 
 $("logoutBtn").onclick = async () => {
   await sb.auth.signOut();
+  me = null; contacts = []; current = null; connected = new Set();
   show("login");
 };
 
 document.addEventListener("visibilitychange", () => {
-  if (!document.hidden && !$("home").classList.contains("hidden")) refreshTg();
+  if (!document.hidden && !$("home").classList.contains("hidden")) { refreshTg(); loadFeed(); }
 });
 
 (async () => {
