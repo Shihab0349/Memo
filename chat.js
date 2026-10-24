@@ -781,7 +781,7 @@
   mb.onclick = () => { if (current) window.openChat(current); };
 
   /* ---------- groups screens ---------- */
-    ["groups.js", "calls.js"].forEach(function (f) {
+    ["groups.js", "calls.js", "extras.js"].forEach(function (f) {
     const s = document.createElement("script");
     s.src = f;
     document.body.appendChild(s);
