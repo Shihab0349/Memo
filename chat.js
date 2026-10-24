@@ -781,7 +781,9 @@
   mb.onclick = () => { if (current) window.openChat(current); };
 
   /* ---------- groups screens ---------- */
-  const gs = document.createElement("script");
-  gs.src = "groups.js";
-  document.body.appendChild(gs);
+    ["groups.js", "calls.js"].forEach(function (f) {
+    const s = document.createElement("script");
+    s.src = f;
+    document.body.appendChild(s);
+  });
 })();
