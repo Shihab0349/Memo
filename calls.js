@@ -6,7 +6,25 @@
   let chan = null, subFor = null;
   let call = null, incoming = null;
   let ringCtx = null, ringInt = null, tickInt = null, wake = null, inTimer = null;
-  let recentAt = 0;
+  let recentAt = 0, authToken = null;
+
+  /* A Supabase rpc() call only runs when it is awaited or .then() is called. bg() always runs it. */
+  function bg(fn, args) {
+    return sb.rpc(fn, args).then(function (r) { return r; }, function () { return null; });
+  }
+
+  sb.auth.getSession().then(function (r) { authToken = r.data.session ? r.data.session.access_token : null; });
+  sb.auth.onAuthStateChange(function (_e, s) { authToken = s ? s.access_token : null; });
+
+  /* "Seen by": record the posts the viewer has seen */
+  const _lf = loadFeed;
+  loadFeed = async function () {
+    await _lf();
+    try {
+      const ids = feedPosts.filter(function (p) { return p.author !== me.id; }).map(function (p) { return p.id; });
+      if (ids.length) await bg("mark_seen", { ids: ids });
+    } catch (e) { /* ignore */ }
+  };
 
   /* ---------- styles and screens ---------- */
   const st = document.createElement("style");
@@ -132,7 +150,6 @@
     $("callInfo").classList.remove("slim");
     $("inBtns").classList.toggle("hidden", mode !== "incoming");
     $("liveBtns").classList.toggle("hidden", mode !== "live");
-    $("cCam").classList.toggle("hidden", c.kind !== "video");
     $("cMute").className = "cbtn";
     $("cMute").innerHTML = "&#127908;";
     $("cCam").className = "cbtn" + (c.kind !== "video" ? " hidden" : "");
@@ -258,10 +275,10 @@
     pc.onconnectionstatechange = () => {
       const s = pc.connectionState;
       if (s === "connected") { clearTimeout(c.disc); onConnected(c); }
-      else if (s === "failed") hangup("Could not connect. Your network may block calls.", c);
+      else if (s === "failed" || s === "closed") hangup("Call ended", c);
       else if (s === "disconnected") {
         clearTimeout(c.disc);
-        c.disc = setTimeout(() => { if (pc.connectionState !== "connected") hangup("Connection lost.", c); }, 8000);
+        c.disc = setTimeout(() => { if (pc.connectionState !== "connected") hangup("Connection lost.", c); }, 6000);
       }
     };
   }
@@ -337,7 +354,7 @@
     if (!incoming) return;
     const id = incoming.id;
     dismissIncoming("");
-    sb.rpc("respond_call", { cid: id, accept: false });
+    bg("respond_call", { cid: id, accept: false });
   };
 
   $("cAccept").onclick = async () => {
@@ -353,7 +370,7 @@
     catch (e) {
       call = null;
       hideUI();
-      sb.rpc("respond_call", { cid: row.id, accept: false });
+      bg("respond_call", { cid: row.id, accept: false });
       return toast("Microphone or camera access was blocked.");
     }
     attachLocal(c);
@@ -395,7 +412,7 @@
     if (!cur || call !== cur) return;
     const id = cur.id;
     endLocal(text || "Call ended");
-    sb.rpc("end_call", { cid: id });
+    bg("end_call", { cid: id });
   }
   $("cEnd").onclick = () => hangup("Call ended");
 
@@ -450,8 +467,34 @@
     if (data && data[0]) showIncoming(data[0]);
   }
 
+  /* While a call is active: check its status every 3 s and send a heartbeat every 10 s */
+  async function pollActive() {
+    const c = call;
+    if (!c) return;
+    const { data } = await sb.from("calls").select("status").eq("id", c.id).maybeSingle();
+    if (!data || call !== c) return;
+    if (["ended", "declined", "missed"].indexOf(data.status) >= 0) {
+      endLocal(data.status === "declined" ? "Call declined" : data.status === "missed" ? "No answer" : "Call ended");
+    }
+  }
+  setInterval(pollActive, 3000);
+  setInterval(() => { if (call) bg("ping_call", { cid: call.id }); }, 10000);
+
+  /* Closing the page or tab ends the call right away */
+  window.addEventListener("pagehide", () => {
+    const c = call;
+    if (!c || !authToken) return;
+    try {
+      fetch(SUPABASE_URL + "/rest/v1/rpc/end_call", {
+        method: "POST", keepalive: true,
+        headers: { "Content-Type": "application/json", apikey: KEY, Authorization: "Bearer " + authToken },
+        body: JSON.stringify({ cid: c.id }),
+      });
+    } catch (e) { /* ignore */ }
+  });
+
   function teardown() {
-    if (call) { cleanup(call); }
+    if (call) { const id = call.id; cleanup(call); bg("end_call", { cid: id }); }
     dismissIncoming("");
     hideUI();
     if (chan) { sb.removeChannel(chan); chan = null; }
